@@ -1,16 +1,15 @@
 	package basemod.patches.com.megacrit.cardcrawl.cards.AbstractCard;
 
-import java.util.ArrayList;
+	import basemod.BaseMod;
+	import com.evacipated.cardcrawl.modthespire.lib.ByRef;
+	import com.evacipated.cardcrawl.modthespire.lib.SpireInsertPatch;
+	import com.evacipated.cardcrawl.modthespire.lib.SpirePatch;
+	import com.megacrit.cardcrawl.cards.AbstractCard;
+	import com.megacrit.cardcrawl.characters.AbstractPlayer;
+	import com.megacrit.cardcrawl.dungeons.AbstractDungeon;
+	import com.megacrit.cardcrawl.monsters.AbstractMonster;
 
-import com.evacipated.cardcrawl.modthespire.lib.ByRef;
-import com.evacipated.cardcrawl.modthespire.lib.SpireInsertPatch;
-import com.evacipated.cardcrawl.modthespire.lib.SpirePatch;
-import com.megacrit.cardcrawl.cards.AbstractCard;
-import com.megacrit.cardcrawl.characters.AbstractPlayer;
-import com.megacrit.cardcrawl.dungeons.AbstractDungeon;
-import com.megacrit.cardcrawl.monsters.AbstractMonster;
-
-import basemod.BaseMod;
+	import java.util.ArrayList;
 
 public class DamageHooks {
 
@@ -30,7 +29,7 @@ public class DamageHooks {
 	@SpirePatch(cls="com.megacrit.cardcrawl.cards.AbstractCard", method="calculateCardDamage")
 	public static class CalculateCardDamageMulti {
 
-		@SpireInsertPatch(rloc=77, localvars={"tmp"})
+		@SpireInsertPatch(rloc=86, localvars={"tmp"})
 		public static void Insert(Object __obj_instance, Object monster, float[] tmp) {
 			AbstractCard c = (AbstractCard) __obj_instance;
 			ArrayList<AbstractMonster> monsters = AbstractDungeon.getMonsters().monsters;
@@ -45,7 +44,7 @@ public class DamageHooks {
 	@SpirePatch(cls="com.megacrit.cardcrawl.cards.AbstractCard", method="applyPowers")
 	public static class ApplyPowers {
 
-		@SpireInsertPatch(rloc=18, localvars={"tmp"})
+		@SpireInsertPatch(rloc=19, localvars={"tmp"})
 		public static void Insert(Object __obj_instance, @ByRef float[] tmp) {
 			AbstractCard c = (AbstractCard) __obj_instance;
 			AbstractPlayer player = AbstractDungeon.player;
@@ -57,7 +56,7 @@ public class DamageHooks {
 	@SpirePatch(cls="com.megacrit.cardcrawl.cards.AbstractCard", method="applyPowers")
 	public static class ApplyPowersMulti {
 
-		@SpireInsertPatch(rloc=59, localvars={"tmp"})
+		@SpireInsertPatch(rloc=69, localvars={"tmp"})
 		public static void Insert(Object __obj_instance, float[] tmp) {
 			AbstractCard c = (AbstractCard) __obj_instance;
 			ArrayList<AbstractMonster> monsters = AbstractDungeon.getMonsters().monsters;

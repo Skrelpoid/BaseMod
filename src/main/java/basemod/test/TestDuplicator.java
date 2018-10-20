@@ -6,8 +6,6 @@ import com.megacrit.cardcrawl.core.Settings;
 import com.megacrit.cardcrawl.dungeons.AbstractDungeon;
 import com.megacrit.cardcrawl.events.AbstractEvent;
 import com.megacrit.cardcrawl.events.AbstractImageEvent;
-import com.megacrit.cardcrawl.events.GenericEventDialog;
-import com.megacrit.cardcrawl.events.shrines.Duplicator;
 import com.megacrit.cardcrawl.localization.EventStrings;
 import com.megacrit.cardcrawl.vfx.cardManip.ShowCardAndObtainEffect;
 
@@ -24,8 +22,8 @@ public class TestDuplicator extends AbstractImageEvent {
 
     public TestDuplicator() {
         super(NAME, DIALOG_1, "images/events/shrine4.jpg");
-        GenericEventDialog.setDialogOption(OPTIONS[0]);
-        GenericEventDialog.setDialogOption(OPTIONS[1]);
+        imageEventText.setDialogOption(OPTIONS[0]);
+        imageEventText.setDialogOption(OPTIONS[1]);
     }
 
     public void onEnterRoom() {
@@ -50,18 +48,18 @@ public class TestDuplicator extends AbstractImageEvent {
             case 0:
                 switch(buttonPressed) {
                     case 0:
-                        GenericEventDialog.updateBodyText(DIALOG_2);
-                        GenericEventDialog.updateDialogOption(0, OPTIONS[1]);
-                        GenericEventDialog.clearRemainingOptions();
+                        imageEventText.updateBodyText(DIALOG_2);
+                        imageEventText.updateDialogOption(0, OPTIONS[1]);
+                        imageEventText.clearRemainingOptions();
                         this.use();
                         this.screenNum = 2;
                         this.logMetric("One dupe");
                         return;
                     case 1:
                         this.screenNum = 2;
-                        GenericEventDialog.updateBodyText(IGNORE);
-                        GenericEventDialog.updateDialogOption(0, OPTIONS[1]);
-                        GenericEventDialog.clearRemainingOptions();
+                        imageEventText.updateBodyText(IGNORE);
+                        imageEventText.updateDialogOption(0, OPTIONS[1]);
+                        imageEventText.clearRemainingOptions();
                         this.logMetric("Ignored");
                         return;
                     default:

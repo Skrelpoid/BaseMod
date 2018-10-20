@@ -1,7 +1,5 @@
 package basemod;
 
-import java.util.function.Consumer;
-
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
@@ -10,7 +8,9 @@ import com.megacrit.cardcrawl.core.Settings;
 import com.megacrit.cardcrawl.helpers.FontHelper;
 import com.megacrit.cardcrawl.helpers.Hitbox;
 import com.megacrit.cardcrawl.helpers.ImageMaster;
-import com.megacrit.cardcrawl.helpers.InputHelper;
+import com.megacrit.cardcrawl.helpers.input.InputHelper;
+
+import java.util.function.Consumer;
 
 public class ModToggleButton implements IUIElement {
 	private static final float TOGGLE_Y_DELTA = 8.0f;

@@ -1,24 +1,20 @@
 package basemod.patches.com.megacrit.cardcrawl.core.CardCrawlGame;
 
-import java.util.ArrayList;
-
-import com.evacipated.cardcrawl.modthespire.lib.LineFinder;
-import com.evacipated.cardcrawl.modthespire.lib.Matcher;
-import com.evacipated.cardcrawl.modthespire.lib.SpireInsertLocator;
-import com.evacipated.cardcrawl.modthespire.lib.SpireInsertPatch;
-import com.evacipated.cardcrawl.modthespire.lib.SpirePatch;
-import com.evacipated.cardcrawl.modthespire.patcher.PatchingException;
-import com.megacrit.cardcrawl.helpers.InputHelper;
-
 import basemod.BaseMod;
+import com.evacipated.cardcrawl.modthespire.lib.*;
+import com.evacipated.cardcrawl.modthespire.patcher.PatchingException;
 import javassist.CannotCompileException;
 import javassist.CtBehavior;
+
+import java.util.ArrayList;
 
 public class UpdateHooks {
 
 	@SpirePatch(cls="com.megacrit.cardcrawl.core.CardCrawlGame", method="update")
 	public static class PreUpdateHook {
-	    @SpireInsertPatch
+	    @SpireInsertPatch(
+	    		locator=Locator.class
+		)
 	    public static void Insert(Object __obj_instance) {
 	        BaseMod.publishPreUpdate();
 	    }
@@ -31,11 +27,11 @@ public class UpdateHooks {
 	    	return resultArr;
 	    }
 
-	    public static class Locator extends SpireInsertLocator
+	    private static class Locator extends SpireInsertLocator
 		{
 			public int[] Locate(CtBehavior ctMethodToPatch) throws CannotCompileException, PatchingException
 			{
-				Matcher finalMatcher = new Matcher.MethodCallMatcher("com.megacrit.cardcrawl.helpers.InputHelper", "updateFirst");
+				Matcher finalMatcher = new Matcher.MethodCallMatcher("com.megacrit.cardcrawl.helpers.input.InputHelper", "updateFirst");
 
 				int[] beforeLines = LineFinder.findInOrder(ctMethodToPatch, new ArrayList<Matcher>(), finalMatcher);
 
@@ -49,16 +45,18 @@ public class UpdateHooks {
 	@SpirePatch(cls="com.megacrit.cardcrawl.core.CardCrawlGame", method="update")
 	public static class PostUpdateHook {
 		
-	    @SpireInsertPatch
+	    @SpireInsertPatch(
+	    		locator=Locator.class
+		)
 	    public static void Insert(Object __obj_instance) {
 	        BaseMod.publishPostUpdate();
 	    }
 
-	    public static class Locator extends SpireInsertLocator
+	    private static class Locator extends SpireInsertLocator
 	    {
 	        public int[] Locate(CtBehavior ctMethodToPatch) throws CannotCompileException, PatchingException
 	        {
-	            Matcher finalMatcher = new Matcher.MethodCallMatcher("com.megacrit.cardcrawl.helpers.InputHelper", "updateLast");
+	            Matcher finalMatcher = new Matcher.MethodCallMatcher("com.megacrit.cardcrawl.helpers.input.InputHelper", "updateLast");
 
 	            return LineFinder.findInOrder(ctMethodToPatch, new ArrayList<Matcher>(), finalMatcher);
 	        }

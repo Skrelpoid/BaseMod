@@ -1,12 +1,8 @@
 package basemod.abstracts.cardbuilder.actionbuilder;
 
-import java.util.function.Supplier;
+import com.megacrit.cardcrawl.powers.*;
 
-import com.megacrit.cardcrawl.powers.DexterityPower;
-import com.megacrit.cardcrawl.powers.FrailPower;
-import com.megacrit.cardcrawl.powers.StrengthPower;
-import com.megacrit.cardcrawl.powers.VulnerablePower;
-import com.megacrit.cardcrawl.powers.WeakPower;
+import java.util.function.Supplier;
 
 public class EffectActionBuilder extends ApplyPowerActionBuilder {
 	

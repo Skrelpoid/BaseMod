@@ -15,6 +15,7 @@ import java.util.ArrayList;
 public class FixDescriptionWidthCustomDynamicVariable
 {
     @SpireInsertPatch(
+            locator=Locator.class,
             localvars={"gl", "word"}
     )
     public static void Insert(AbstractCard __instance, @ByRef GlyphLayout[] gl, String word)
@@ -24,7 +25,7 @@ public class FixDescriptionWidthCustomDynamicVariable
         }
     }
 
-    public static class Locator extends SpireInsertLocator
+    private static class Locator extends SpireInsertLocator
     {
         @Override
         public int[] Locate(CtBehavior ctMethodToPatch) throws Exception

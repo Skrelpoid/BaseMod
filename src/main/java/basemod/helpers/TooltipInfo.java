@@ -1,5 +1,7 @@
 package basemod.helpers;
 
+import com.megacrit.cardcrawl.helpers.PowerTip;
+
 public class TooltipInfo
 {
     public String title;
@@ -9,5 +11,10 @@ public class TooltipInfo
     {
         this.title = title;
         this.description = description;
+    }
+
+    public PowerTip toPowerTip()
+    {
+        return new PowerTip(title, description);
     }
 }

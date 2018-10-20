@@ -1,24 +1,29 @@
 package basemod.patches.com.megacrit.cardcrawl.cards.AbstractCard;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
+import basemod.BaseMod;
+import basemod.ReflectionHacks;
+import basemod.abstracts.CustomCard;
+import basemod.helpers.SuperclassFinder;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.evacipated.cardcrawl.modthespire.lib.SpireInsertPatch;
 import com.evacipated.cardcrawl.modthespire.lib.SpirePatch;
+import com.evacipated.cardcrawl.modthespire.lib.SpireReturn;
 import com.megacrit.cardcrawl.cards.AbstractCard;
 import com.megacrit.cardcrawl.cards.AbstractCard.CardColor;
+import com.megacrit.cardcrawl.cards.AbstractCard.CardType;
+import com.megacrit.cardcrawl.core.Settings;
+import com.megacrit.cardcrawl.dungeons.AbstractDungeon;
+import com.megacrit.cardcrawl.helpers.FontHelper;
 import com.megacrit.cardcrawl.helpers.ImageMaster;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
-import basemod.BaseMod;
-import basemod.abstracts.CustomCard;
-import basemod.helpers.SuperclassFinder;
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 
 public class RenderFixSwitches {
 
@@ -26,105 +31,106 @@ public class RenderFixSwitches {
 	public static class RenderBannerSwitch {
 		public static final Logger logger = LogManager.getLogger(BaseMod.class.getName());
 		
-		public static void Replace(Object __obj_instance, SpriteBatch sb, float drawX, float drawY) {
-			AbstractCard card = (AbstractCard)__obj_instance;
-			AbstractCard.CardRarity rarity = card.rarity;
+		public static SpireReturn<?> Prefix(AbstractCard __instance, SpriteBatch sb, float drawX, float drawY) {
+			//if it is not a custom card it cant possibly have the method getBannerSmallTexture force the normal rendering
+			if(!(__instance instanceof CustomCard)) return SpireReturn.Continue();
 			
-			Texture bannerTexture = null;
-			if (card instanceof CustomCard) {
-				bannerTexture = ((CustomCard)card).getBannerSmallTexture();
+			CustomCard card = (CustomCard) __instance;
+			Texture texture = card.getBannerSmallTexture();
+			if(texture == null) {
+				return SpireReturn.Continue();
 			}
-			if(bannerTexture == null) {
-				switch(rarity.toString()) {
-				case "BASIC":
-				case "COMMON":
-				case "CURSE":
-					bannerTexture = ImageMaster.CARD_BANNER_COMMON;
-					break;
-				case "UNCOMMON":
-					bannerTexture = ImageMaster.CARD_BANNER_UNCOMMON;
-					break;
-				case "RARE":
-					bannerTexture = ImageMaster.CARD_BANNER_RARE;
-					break;
-					default:
-						bannerTexture = ImageMaster.CARD_BANNER_COMMON;
-				}
-			}
-			try {
-				Method renderHelperMethod;
-				Field renderColorField; 
-				
-				renderHelperMethod = SuperclassFinder.getSuperClassMethod(card.getClass(), "renderHelper", SpriteBatch.class, Color.class, Texture.class, float.class, float.class);
-				renderHelperMethod.setAccessible(true);
-				renderColorField = SuperclassFinder.getSuperclassField(card.getClass(), "renderColor");
-				renderColorField.setAccessible(true);
-				
-				Color renderColor = (Color) renderColorField.get(card);
-				renderHelperMethod.invoke(card, sb, renderColor, bannerTexture, drawX, drawY);
-			}
-			catch(IllegalAccessException | IllegalArgumentException | NoSuchFieldException | NoSuchMethodException | InvocationTargetException | SecurityException e) {
-				logger.error("could not render banner for card " + card.getClass().toString() + " with color " + card.color.toString());
-				logger.error("exception is: " + e.getMessage());
-				e.printStackTrace();
-			}
+			
+			renderHelper(card, sb, Color.WHITE, texture, drawX, drawY);
+			
+			return SpireReturn.Return(null);
 		}
 	}
 	
 	@SpirePatch(cls = "com.megacrit.cardcrawl.cards.AbstractCard", method = "renderEnergy")
 	public static class RenderEnergySwitch {
-		public static final Logger logger = LogManager.getLogger(BaseMod.class.getName());
-		
-		@SpireInsertPatch(rloc = 26, localvars = { "drawX", "drawY" })
-		public static void Insert(Object __obj_instance, Object sbObj, float drawX, float drawY) {
-			AbstractCard card = (AbstractCard) __obj_instance;
-			CardColor color = card.color;
-			SpriteBatch sb = (SpriteBatch) sbObj;
+		public static SpireReturn<?> Prefix(AbstractCard __instance, SpriteBatch sb) {
+			//if it is not a custom card use the default renderer
+			if(!(__instance instanceof CustomCard)) 
+				return SpireReturn.Continue();
+			
+			//if the custom card is cost -2 or locked or not seen or darken end the method
+			if(__instance.cost <= -2 || __instance.isLocked || !__instance.isSeen 
+					|| (boolean) ReflectionHacks.getPrivate(__instance, AbstractCard.class, "darken")) {
+				return SpireReturn.Return(null);
+			}
+			
+			CustomCard card = (CustomCard) __instance;
+			
+			float current_x = (float) ReflectionHacks.getPrivate(__instance, AbstractCard.class, "current_x");
+			float current_y = (float) ReflectionHacks.getPrivate(__instance, AbstractCard.class, "current_y");
+			
+			float drawX = current_x - 256f;
+			float drawY = current_y - 256f;
 
-			if (color != CardColor.RED && color != CardColor.GREEN && color != CardColor.BLUE
-					&& color != CardColor.COLORLESS && color != CardColor.CURSE) {
-				Texture orbTexture = null;
-				try {
-					if (card instanceof CustomCard) {
-						orbTexture = ((CustomCard) card).getOrbSmallTexture();
-					}
-					if (orbTexture == null){
-						Texture baseModTexture = BaseMod.getEnergyOrbTexture(color.toString());
-						if (baseModTexture == null) {
-							orbTexture = new Texture(BaseMod.getEnergyOrb(color.toString()));
-							BaseMod.saveEnergyOrbTexture(color.toString(), orbTexture);
-						} else {
-							orbTexture = baseModTexture;
+			Texture texture = card.getOrbSmallTexture();
+			
+			if(texture == null) {
+				Texture baseModTexture = BaseMod.getEnergyOrbTexture(card.color);
+				if (baseModTexture == null) {
+					if(card.color != AbstractCard.CardColor.RED &&
+							card.color != AbstractCard.CardColor.GREEN &&
+							card.color != AbstractCard.CardColor.BLUE &&
+							card.color != AbstractCard.CardColor.COLORLESS &&
+							card.color != AbstractCard.CardColor.CURSE) {
+						texture = ImageMaster.loadImage(BaseMod.getEnergyOrb(card.color));
+						BaseMod.saveEnergyOrbTexture(card.color, texture);
+					} else {
+						switch(card.color) {
+						case BLUE:
+							texture = ImageMaster.CARD_BLUE_ORB;
+							break;
+						case GREEN:
+							texture = ImageMaster.CARD_GREEN_ORB;
+							break;
+						case RED:
+							texture = ImageMaster.CARD_RED_ORB;
+							break;
+						case COLORLESS:
+						case CURSE:
+							texture = ImageMaster.CARD_COLORLESS_ORB;
+							break;
 						}
 					}
-				} catch (NullPointerException e) {
-					logger.error("could not load texture for energy orb for card " + card.getClass().toString() + " with color " + color.toString());
-					logger.error("exception is: " + e.getMessage());
-					e.printStackTrace();
-					orbTexture = ImageMaster.CARD_COLORLESS_ORB;
+				} else {
+					texture = baseModTexture;
 				}
-				try {
-					// use reflection hacks to invoke renderHelper (without float scale)
-					Method renderHelperMethod;
-					Field renderColorField; 
-					
-					
-					renderHelperMethod = SuperclassFinder.getSuperClassMethod(card.getClass(), "renderHelper", SpriteBatch.class, Color.class, Texture.class, float.class, float.class);
-					renderHelperMethod.setAccessible(true);
-					renderColorField = SuperclassFinder.getSuperclassField(card.getClass(), "renderColor");
-					renderColorField.setAccessible(true);
-					
-						
-					Color renderColor = (Color) renderColorField.get(card);
-					renderHelperMethod.invoke(card, sb, renderColor, orbTexture, drawX, drawY);
-				} catch (IllegalAccessException | IllegalArgumentException | NoSuchFieldException | NoSuchMethodException | InvocationTargetException | SecurityException e) {
-					logger.error("could not render energy for card " + card.getClass().toString() + " with color " + color.toString());
-					logger.error("exception is: " + e.getMessage());
-					e.printStackTrace();
-				}
-
 			}
-
+			
+			renderHelper(card, sb, Color.WHITE.cpy(), texture, drawX, drawY);
+			
+			
+			if(card.type == CardType.STATUS && card.cost == -2) return SpireReturn.Return(null);
+			if(card.type == CardType.CURSE && card.cost == -2) return SpireReturn.Return(null);
+			
+			Color costColor = Color.WHITE.cpy();
+            if (AbstractDungeon.player != null && AbstractDungeon.player.hand.contains(card) && !card.hasEnoughEnergy()) {
+                costColor = (Color) ReflectionHacks.getPrivateStatic(AbstractCard.class, "ENERGY_COST_RESTRICTED_COLOR");
+            } else if(card.isCostModified || card.isCostModifiedForTurn || card.freeToPlayOnce) {
+                costColor = (Color) ReflectionHacks.getPrivateStatic(AbstractCard.class, "ENERGY_COST_MODIFIED_COLOR");
+            }
+			
+			costColor.a = card.transparency;
+			String text = getCost(card);
+			FontHelper.cardEnergyFont_L.getData().setScale(card.drawScale);
+			BitmapFont font = FontHelper.cardEnergyFont_L;
+			
+			FontHelper.renderRotatedText(sb, font, text, current_x, current_y, -132.0f * card.drawScale * Settings.scale, 192.0f * card.drawScale * Settings.scale, card.angle, false, costColor);
+			
+			return SpireReturn.Return(null);
+		}
+		
+		private static String getCost(AbstractCard card) {
+			if(card.cost == -1)
+				return "X";
+			if(card.freeToPlayOnce)
+				return "0";
+			return Integer.toString(card.costForTurn);
 		}
 	}
 	
@@ -139,7 +145,7 @@ public class RenderFixSwitches {
 			SpriteBatch sb = (SpriteBatch) sbObj;
 			if (color != CardColor.RED && color != CardColor.GREEN && color != CardColor.BLUE
 					&& color != CardColor.COLORLESS && color != CardColor.CURSE) {
-				Color glowColor = BaseMod.getGlowColor(color.toString());
+				Color glowColor = BaseMod.getGlowColor(color);
 				if (glowColor == null) {
 					glowColor = Color.WHITE;
 				}
@@ -168,163 +174,95 @@ public class RenderFixSwitches {
 		}
 	}
 	
-	@SpirePatch(cls = "com.megacrit.cardcrawl.cards.AbstractCard", method = "renderAttackBg")
-	public static class RenderAttackBgSwitch {
-		public static final Logger logger = LogManager.getLogger(BaseMod.class.getName());
-		
-		// unfortunately due to the way the code for renderAttackBg is set up
-		// it will in the default case for the switch statement render a default
-		// background but I'm hoping that rendering over the same spot
-		// will just cover up the default background
-
-		public static void Postfix(Object __obj_instance, Object sbObj, float x, float y) {
-			AbstractCard card = (AbstractCard) __obj_instance;
-			CardColor color = card.color;
-			SpriteBatch sb = (SpriteBatch) sbObj;
-
-			if (color != CardColor.RED && color != CardColor.GREEN && color != CardColor.BLUE
-					&& color != CardColor.COLORLESS && color != CardColor.CURSE) {
-				Texture bgTexture = null;
-				try {
-					if (card instanceof CustomCard) {
-						bgTexture = ((CustomCard) card).getBackgroundSmallTexture();
-					}
-					if (bgTexture == null) {
-						Texture baseModTexture = BaseMod.getAttackBgTexture(color.toString());
-						if (baseModTexture == null) {
-							bgTexture = new Texture(BaseMod.getAttackBg(color.toString()));
-							BaseMod.saveAttackBgTexture(color.toString(), bgTexture);
-						} else {
-							bgTexture = baseModTexture;
-						}
-					}
-				} catch (NullPointerException e) {
-					logger.error("could not load texture for attack bg on card " + card.getClass().toString() + " with color " + color.toString());
-					logger.error("exception is: " + e.getMessage());
-					e.printStackTrace();
-					bgTexture = ImageMaster.CARD_SKILL_BG_BLACK;
-				}
-				try {
-					// use reflection hacks to invoke renderHelper (without float scale)
-					Method renderHelperMethod = SuperclassFinder.getSuperClassMethod(card.getClass(), "renderHelper", SpriteBatch.class,
-							Color.class, Texture.class, float.class, float.class);
-					renderHelperMethod.setAccessible(true);
-					Field renderColorField = SuperclassFinder.getSuperclassField(card.getClass(), "renderColor");
-					renderColorField.setAccessible(true);
-					Color renderColor = (Color) renderColorField.get(card);
-					renderHelperMethod.invoke(card, sb, renderColor, bgTexture, x, y);
-				} catch (IllegalAccessException | IllegalArgumentException | NoSuchFieldException | NoSuchMethodException | InvocationTargetException | SecurityException e) {
-					logger.error("could not set card attack bg on card " + card.getClass().toString() + " with color " + color.toString());
-					logger.error("exception is: " + e.getMessage());
-					e.printStackTrace();
-				}
-			}
-		}
-	}
-
-
-	@SpirePatch(cls = "com.megacrit.cardcrawl.cards.AbstractCard", method = "renderPowerBg")
-	public static class RenderPowerBgSwitch {
-		public static final Logger logger = LogManager.getLogger(BaseMod.class.getName());
-		
-		// unfortunately due to the way the code for renderAttackBg is set up
-		// it will in the default case for the switch statement render a default
-		// background but I'm hoping that rendering over the same spot
-		// will just cover up the default background
-	
-		public static void Postfix(Object __obj_instance, Object sbObj, float x, float y) {
-			AbstractCard card = (AbstractCard) __obj_instance;
-			CardColor color = card.color;
-			SpriteBatch sb = (SpriteBatch) sbObj;
+	@SpirePatch(cls = "com.megacrit.cardcrawl.cards.AbstractCard", method = "renderCardBg")
+	public static class RenderBgSwitch {
+		public static SpireReturn<?> Prefix(AbstractCard __instance, SpriteBatch sb, float xPos, float yPos) {
+			if(!(__instance instanceof CustomCard) 
+					|| __instance.color==AbstractCard.CardColor.RED 
+					|| __instance.color==AbstractCard.CardColor.GREEN
+					|| __instance.color==AbstractCard.CardColor.BLUE 
+					|| __instance.color==AbstractCard.CardColor.COLORLESS
+					|| __instance.color==AbstractCard.CardColor.CURSE) return SpireReturn.Continue();
+			CardColor color = __instance.color;
+			CustomCard card = (CustomCard) __instance;
+			Texture texture;
 			
-			if (!color.toString().equals("RED") && !color.toString().equals("GREEN") && !color.toString().equals("BLUE")
-					&& !color.toString().equals("COLORLESS") && !color.toString().equals("CURSE")) {
-				Texture bgTexture = null;
-				try {
-					if (card instanceof CustomCard) {
-						bgTexture = ((CustomCard) card).getBackgroundSmallTexture();
-					}
-					if (bgTexture == null) {
-						Texture baseModTexture = BaseMod.getPowerBgTexture(color.toString());
-						if (baseModTexture == null) {
-							bgTexture = new Texture(BaseMod.getPowerBg(color.toString()));
-							BaseMod.savePowerBgTexture(color.toString(), bgTexture);
-						} else {
-							bgTexture = baseModTexture;
-						}
-					}
-				} catch (NullPointerException e) {
-					logger.error("could not load texture for power bg on card " + card.getClass().toString() + " with color " + color.toString());
-					logger.error("exception is: " + e.getMessage());
-					e.printStackTrace();
-					bgTexture = ImageMaster.CARD_SKILL_BG_BLACK;
+			switch(card.type) {
+			case POWER:
+				if (BaseMod.getPowerBgTexture(color) == null) {
+					BaseMod.savePowerBgTexture(color, ImageMaster.loadImage(BaseMod.getPowerBg(color)));
 				}
-				try {
-					// use reflection hacks to invoke renderHelper (without float scale)
-					Method renderHelperMethod = SuperclassFinder.getSuperClassMethod(card.getClass(), "renderHelper", SpriteBatch.class,
-							Color.class, Texture.class, float.class, float.class);
-					renderHelperMethod.setAccessible(true);
-					Field renderColorField = SuperclassFinder.getSuperclassField(card.getClass(), "renderColor");
-					renderColorField.setAccessible(true);
-					Color renderColor = (Color) renderColorField.get(card);
-					renderHelperMethod.invoke(card, sb, renderColor, bgTexture, x, y);
-				} catch (IllegalAccessException | IllegalArgumentException | NoSuchFieldException | NoSuchMethodException | InvocationTargetException | SecurityException e) {
-					logger.error("could not set card skill bg on card " + card.getClass().toString() + " with color " + color.toString());
+				texture = BaseMod.getPowerBgTexture(color);
+				break;
+			case ATTACK:
+				if (BaseMod.getAttackBgTexture(color) == null) {
+					BaseMod.saveAttackBgTexture(color, ImageMaster.loadImage(BaseMod.getAttackBg(color)));
 				}
+				texture = BaseMod.getAttackBgTexture(color);
+				break;
+			case SKILL:
+				if (BaseMod.getSkillBgTexture(color) == null) {
+					BaseMod.saveSkillBgTexture(color, ImageMaster.loadImage(BaseMod.getSkillBg(color)));
+				}
+				texture = BaseMod.getSkillBgTexture(color);
+				break;
+			default:
+				texture = ImageMaster.CARD_SKILL_BG_BLACK;
+				break;
 			}
-		}
-	}
-
-	@SpirePatch(cls = "com.megacrit.cardcrawl.cards.AbstractCard", method = "renderSkillBg")
-	public static class RenderSkillBgSwitch {
-		public static final Logger logger = LogManager.getLogger(BaseMod.class.getName());
-		
-		// unfortunately due to the way the code for renderAttackBg is set up
-		// it will in the default case for the switch statement render a default
-		// background but I'm hoping that rendering over the same spot
-		// will just cover up the default background
-
-		public static void Postfix(Object __obj_instance, Object sbObj, float x, float y) {
-			AbstractCard card = (AbstractCard) __obj_instance;
-			CardColor color = card.color;
-			SpriteBatch sb = (SpriteBatch) sbObj;
 			
-			if (!color.toString().equals("RED") && !color.toString().equals("GREEN") && !color.toString().equals("BLUE")
-					&& !color.toString().equals("COLORLESS") && !color.toString().equals("CURSE")) {
-				Texture bgTexture = null;
-				try {
-					if (card instanceof CustomCard) {
-						bgTexture = ((CustomCard) card).getBackgroundSmallTexture();
-					}
-					if (bgTexture == null) {
-						Texture baseModTexture = BaseMod.getSkillBgTexture(color.toString());
-						if (baseModTexture == null) {
-							bgTexture = new Texture(BaseMod.getSkillBg(color.toString()));
-							BaseMod.saveSkillBgTexture(color.toString(), bgTexture);
-						} else {
-							bgTexture = baseModTexture;
-						}
-					}
-				} catch (NullPointerException e) {
-					logger.error("could not load texture for skill bg on card " + card.getClass().toString() + " with color " + color.toString());
-					logger.error("exception is: " + e.getMessage());
-					e.printStackTrace();
-					bgTexture = ImageMaster.CARD_SKILL_BG_BLACK;
-				}
-				try {
-					// use reflection hacks to invoke renderHelper (without float scale)
-					Method renderHelperMethod = SuperclassFinder.getSuperClassMethod(card.getClass(), "renderHelper", SpriteBatch.class,
-							Color.class, Texture.class, float.class, float.class);
-					renderHelperMethod.setAccessible(true);
-					Field renderColorField = SuperclassFinder.getSuperclassField(card.getClass(), "renderColor");
-					renderColorField.setAccessible(true);
-					Color renderColor = (Color) renderColorField.get(card);
-					renderHelperMethod.invoke(card, sb, renderColor, bgTexture, x, y);
-				} catch (IllegalAccessException | IllegalArgumentException | NoSuchFieldException | NoSuchMethodException | InvocationTargetException | SecurityException e) {
-					logger.error("could not set card skill bg on card " + card.getClass().toString() + " with color " + color.toString());
-				}
+			if(!(card.textureBackgroundSmallImg == null) && !card.textureBackgroundSmallImg.isEmpty()) {
+				texture = card.getBackgroundSmallTexture();
 			}
+			
+			if(texture == null) {
+				BaseMod.logger.info(color.toString() + " texture is null wtf");
+				return SpireReturn.Continue();
+			}
+			
+			renderHelper(card, sb, Color.WHITE, texture, xPos, yPos);
+			
+			return SpireReturn.Return(null);
 		}
 	}
 	
+	private static void renderHelper(AbstractCard card, SpriteBatch sb, Color color, Texture texture, float xPos, float yPos) {
+		try {
+			// use reflection hacks to invoke renderHelper (without float scale)
+			Method renderHelperMethod;
+			Field renderColorField; 
+			
+			
+			renderHelperMethod = SuperclassFinder.getSuperClassMethod(card.getClass(), "renderHelper", SpriteBatch.class, Color.class, Texture.class, float.class, float.class);
+			renderHelperMethod.setAccessible(true);
+			renderColorField = SuperclassFinder.getSuperclassField(card.getClass(), "renderColor");
+			renderColorField.setAccessible(true);
+			
+				
+			Color renderColor = (Color) renderColorField.get(card);
+			renderHelperMethod.invoke(card, sb, renderColor, texture, xPos, yPos);
+		} catch (IllegalAccessException | IllegalArgumentException | NoSuchFieldException | NoSuchMethodException | InvocationTargetException | SecurityException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	private static void renderHelper(AbstractCard card, SpriteBatch sb, Color color, Texture texture, float xPos, float yPos, float scale) {
+		try {
+			// use reflection hacks to invoke renderHelper (without float scale)
+			Method renderHelperMethod;
+			Field renderColorField; 
+			
+			
+			renderHelperMethod = SuperclassFinder.getSuperClassMethod(card.getClass(), "renderHelper", SpriteBatch.class, Color.class, Texture.class, float.class, float.class, float.class);
+			renderHelperMethod.setAccessible(true);
+			renderColorField = SuperclassFinder.getSuperclassField(card.getClass(), "renderColor");
+			renderColorField.setAccessible(true);
+			
+				
+			Color renderColor = (Color) renderColorField.get(card);
+			renderHelperMethod.invoke(card, sb, renderColor, texture, xPos, yPos);
+		} catch (IllegalAccessException | IllegalArgumentException | NoSuchFieldException | NoSuchMethodException | InvocationTargetException | SecurityException e) {
+			e.printStackTrace();
+		}
+	}
 }

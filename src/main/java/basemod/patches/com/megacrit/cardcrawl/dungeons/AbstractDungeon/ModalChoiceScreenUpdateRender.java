@@ -17,7 +17,9 @@ public class ModalChoiceScreenUpdateRender
     )
     public static class Update
     {
-        @SpireInsertPatch
+        @SpireInsertPatch(
+                locator=Locator.class
+        )
         public static void Insert(AbstractDungeon __instance)
         {
             if (AbstractDungeon.screen == ModalChoiceScreen.Enum.MODAL_CHOICE) {
@@ -25,7 +27,7 @@ public class ModalChoiceScreenUpdateRender
             }
         }
 
-        public static class Locator extends SpireInsertLocator
+        private static class Locator extends SpireInsertLocator
         {
             @Override
             public int[] Locate(CtBehavior ctBehavior) throws Exception
@@ -44,7 +46,9 @@ public class ModalChoiceScreenUpdateRender
     )
     public static class Render
     {
-        @SpireInsertPatch
+        @SpireInsertPatch(
+                locator=Locator.class
+        )
         public static void Insert(AbstractDungeon __instance, SpriteBatch sb)
         {
             if (AbstractDungeon.screen == ModalChoiceScreen.Enum.MODAL_CHOICE) {
@@ -52,7 +56,7 @@ public class ModalChoiceScreenUpdateRender
             }
         }
 
-        public static class Locator extends SpireInsertLocator
+        private static class Locator extends SpireInsertLocator
         {
             @Override
             public int[] Locate(CtBehavior ctBehavior) throws Exception

@@ -1,14 +1,10 @@
 package basemod.patches.com.megacrit.cardcrawl.helpers.PotionLibrary;
 
+import basemod.BaseMod;
 import com.evacipated.cardcrawl.modthespire.lib.SpirePatch;
-
-
+import com.megacrit.cardcrawl.potions.FirePotion;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
-import com.megacrit.cardcrawl.potions.*;
-
-import basemod.BaseMod;
 
 @SpirePatch(
 		cls="com.megacrit.cardcrawl.helpers.PotionHelper",

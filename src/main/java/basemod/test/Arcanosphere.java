@@ -1,9 +1,8 @@
 package basemod.test;
 
+import basemod.abstracts.CustomRelic;
 import com.megacrit.cardcrawl.dungeons.AbstractDungeon;
 import com.megacrit.cardcrawl.relics.AbstractRelic;
-
-import basemod.abstracts.CustomRelic;
 
 public class Arcanosphere extends CustomRelic {
 	public static final String ID = "Arcanosphere";

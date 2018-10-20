@@ -1,10 +1,10 @@
 package basemod;
 
-import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.megacrit.cardcrawl.core.Settings;
+import com.megacrit.cardcrawl.helpers.ImageMaster;
 
 public class ModImage implements IUIElement {
 	private Texture texture;
@@ -14,7 +14,7 @@ public class ModImage implements IUIElement {
 	private float h;
 
 	public ModImage(float x, float y, String texturePath) {
-		this.texture = new Texture(Gdx.files.internal(texturePath));
+		this.texture = ImageMaster.loadImage(texturePath);
 		this.x = x * Settings.scale;
 		this.y = y * Settings.scale;
 		this.w = texture.getWidth() * Settings.scale;

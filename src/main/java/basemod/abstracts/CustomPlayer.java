@@ -5,36 +5,50 @@ import basemod.animations.AbstractAnimation;
 import basemod.animations.G3DJAnimation;
 import basemod.interfaces.ModelRenderSubscriber;
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.graphics.g3d.Environment;
 import com.badlogic.gdx.graphics.g3d.ModelBatch;
+import com.megacrit.cardcrawl.cards.AbstractCard;
 import com.megacrit.cardcrawl.characters.AbstractPlayer;
 import com.megacrit.cardcrawl.core.Settings;
 import com.megacrit.cardcrawl.dungeons.AbstractDungeon;
-import com.megacrit.cardcrawl.helpers.ImageMaster;
-import com.megacrit.cardcrawl.ui.panels.EnergyPanel;
+import com.megacrit.cardcrawl.helpers.CardLibrary;
+import com.megacrit.cardcrawl.helpers.Prefs;
+import com.megacrit.cardcrawl.helpers.SaveHelper;
+import com.megacrit.cardcrawl.localization.CharacterStrings;
+import com.megacrit.cardcrawl.saveAndContinue.SaveAndContinue;
+import com.megacrit.cardcrawl.screens.CharSelectInfo;
+import com.megacrit.cardcrawl.screens.stats.CharStat;
+import com.megacrit.cardcrawl.screens.stats.StatsScreen;
+import com.megacrit.cardcrawl.ui.panels.energyorb.EnergyOrbInterface;
+import com.megacrit.cardcrawl.unlock.UnlockTracker;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
-import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.Map;
 
-public abstract class CustomPlayer extends AbstractPlayer implements ModelRenderSubscriber {
-	
-	public static final int LAYER_COUNT = 5;
-	public static final float DEFAULT_ANGLE = 0.0f;
+public abstract class CustomPlayer extends AbstractPlayer implements ModelRenderSubscriber
+{
+	private static final Logger logger = LogManager.getLogger(CustomPlayer.class.getName());
 
-	AbstractAnimation animation;
-	
-	private ArrayList<Texture> energyLayers = new ArrayList<Texture>();
-	private float[] energyLayerSpeeds = null;
-	private float[] angles = null;
-	private Texture orbVfx;
+	protected AbstractAnimation animation;
+
+	protected EnergyOrbInterface energyOrb;
+	protected Prefs prefs;
+	protected CharStat charStat;
 
 	public CustomPlayer(String name, PlayerClass playerClass, String[] orbTextures, String orbVfxPath,
 			String model, String animation) {
 		this(name, playerClass, orbTextures, orbVfxPath, null, model, animation);
+	}
+
+	public CustomPlayer(String name, PlayerClass playerClass, EnergyOrbInterface energyOrbInterface,
+						String model, String animation) {
+		this(name, playerClass, energyOrbInterface, new G3DJAnimation(model, animation));
 	}
 	
 	public CustomPlayer(String name, PlayerClass playerClass, String[] orbTextures, String orbVfxPath, float[] layerSpeeds,
@@ -48,16 +62,14 @@ public abstract class CustomPlayer extends AbstractPlayer implements ModelRender
 
 	public CustomPlayer(String name, PlayerClass playerClass, String[] orbTextures, String orbVfxPath, float[] layerSpeeds,
 						AbstractAnimation animation) {
+		this(name, playerClass, new CustomEnergyOrb(orbTextures, orbVfxPath, layerSpeeds), animation);
+	}
+
+	public CustomPlayer(String name, PlayerClass playerClass, EnergyOrbInterface energyOrbInterface, AbstractAnimation animation) {
 		super(name, playerClass);
-		
-		if (orbTextures == null || orbVfxPath == null) {
-			buildDefaultOrb();
-		} else {
-			buildCustomOrb(orbTextures, orbVfxPath);
-		}
-		
-		energyLayerSpeeds = layerSpeeds;
-		initAngles();
+
+		energyOrb = energyOrbInterface;
+		charStat = new CharStat(this);
 		
 		this.dialogX = (this.drawX + 0.0F * Settings.scale);
 		this.dialogY = (this.drawY + 220.0F * Settings.scale);
@@ -70,13 +82,6 @@ public abstract class CustomPlayer extends AbstractPlayer implements ModelRender
 		
 		if (animation.type() == AbstractAnimation.Type.MODEL) {
 			BaseMod.subscribe(this);
-		}
-	}
-	
-	private void initAngles() {
-		angles = new float[LAYER_COUNT];
-		for (int i = 0; i < angles.length; i++) {
-			angles[i] = DEFAULT_ANGLE;
 		}
 	}
 
@@ -103,176 +108,167 @@ public abstract class CustomPlayer extends AbstractPlayer implements ModelRender
 				break;
 		}
 	}
-	
-	public Texture getOrbVfxTexture() {
-		return orbVfx;
-	}
-	
-	public static final String DEFAULT_ORB_VFX = "images/ui/topPanel/energyRedVFX.png";
-	
-	private void buildDefaultOrb() {
-		energyLayers.add(ImageMaster.ENERGY_RED_LAYER1);
-		energyLayers.add(ImageMaster.ENERGY_RED_LAYER2);
-		energyLayers.add(ImageMaster.ENERGY_RED_LAYER3);
-		energyLayers.add(ImageMaster.ENERGY_RED_LAYER4);
-		energyLayers.add(ImageMaster.ENERGY_RED_LAYER5);
-		energyLayers.add(ImageMaster.ENERGY_RED_LAYER6);
-		energyLayers.add(ImageMaster.ENERGY_RED_LAYER1D);
-		energyLayers.add(ImageMaster.ENERGY_RED_LAYER2D);
-		energyLayers.add(ImageMaster.ENERGY_RED_LAYER3D);
-		energyLayers.add(ImageMaster.ENERGY_RED_LAYER4D);
-		energyLayers.add(ImageMaster.ENERGY_RED_LAYER5D);
 
-		orbVfx = ImageMaster.loadImage(DEFAULT_ORB_VFX);
-	}
-	
-	private void buildCustomOrb(String[] orbTextures, String orbVfxPath) {
-		for(String texPath : orbTextures) {
-			energyLayers.add(new Texture(Gdx.files.internal(texPath)));
-		}
-		
-		orbVfx = new Texture(Gdx.files.internal(orbVfxPath));
-	}
-	
-	public void renderOrb(EnergyPanel panel, SpriteBatch sb) {
-		sb.setColor(Color.WHITE);
-		
-		Field orb_scale;
-		Field orb_angle_1;
-		Field orb_angle_2;
-		Field orb_angle_3;
-		Field orb_angle_4;
-		Field orb_angle_5;
-		
-		try {
-			orb_scale = panel.getClass().getDeclaredField("ORB_IMG_SCALE");
-			orb_scale.setAccessible(true);
-			
-			float ORB_IMG_SCALE = orb_scale.getFloat(panel);
-			
-			orb_angle_1 = panel.getClass().getDeclaredField("angle1");
-			orb_angle_1.setAccessible(true);
-			
-			float angle1 = orb_angle_1.getFloat(panel);
-			
-			orb_angle_2 = panel.getClass().getDeclaredField("angle2");
-			orb_angle_2.setAccessible(true);
-			
-			float angle2 = orb_angle_2.getFloat(panel);
-			
-			orb_angle_3 = panel.getClass().getDeclaredField("angle3");
-			orb_angle_3.setAccessible(true);
-			
-			float angle3 = orb_angle_3.getFloat(panel);
-			
-			orb_angle_4 = panel.getClass().getDeclaredField("angle4");
-			orb_angle_4.setAccessible(true);
-			
-			float angle4 = orb_angle_4.getFloat(panel);
-			
-			orb_angle_5 = panel.getClass().getDeclaredField("angle5");
-			orb_angle_5.setAccessible(true);
-			
-			float angle5 = orb_angle_5.getFloat(panel);
-			
-			if (energyLayerSpeeds != null) {
-				angles[4] += Gdx.graphics.getDeltaTime() * energyLayerSpeeds[0];
-				angles[3] += Gdx.graphics.getDeltaTime() * energyLayerSpeeds[1];
-				angles[2] += Gdx.graphics.getDeltaTime() * energyLayerSpeeds[2];
-				angles[1] += Gdx.graphics.getDeltaTime() * energyLayerSpeeds[3];
-				angles[0] += Gdx.graphics.getDeltaTime() * energyLayerSpeeds[4];
-				angle5 = angles[4];
-				angle4 = angles[3];
-				angle3 = angles[2];
-				angle2 = angles[1];
-				angle1 = angles[0];
-			}
-			
-			sb.setColor(Color.WHITE);
-			
-		    sb.draw(energyLayers.get(0), panel.current_x - 64.0F, panel.current_y - 64.0F, 64.0F, 64.0F, 128.0F, 128.0F, ORB_IMG_SCALE, ORB_IMG_SCALE, angle1, 0, 0, 128, 128, false, false);
-		    
-		    sb.draw(energyLayers.get(1), panel.current_x - 64.0F, panel.current_y - 64.0F, 64.0F, 64.0F, 128.0F, 128.0F, ORB_IMG_SCALE, ORB_IMG_SCALE, angle2, 0, 0, 128, 128, false, false);
-		    
-		    sb.draw(energyLayers.get(2), panel.current_x - 64.0F, panel.current_y - 64.0F, 64.0F, 64.0F, 128.0F, 128.0F, ORB_IMG_SCALE, ORB_IMG_SCALE, angle3, 0, 0, 128, 128, false, false);
-		    
-		    sb.draw(energyLayers.get(3), panel.current_x - 64.0F, panel.current_y - 64.0F, 64.0F, 64.0F, 128.0F, 128.0F, ORB_IMG_SCALE, ORB_IMG_SCALE, angle4, 0, 0, 128, 128, false, false);
-		    
-		    sb.draw(energyLayers.get(4), panel.current_x - 64.0F, panel.current_y - 64.0F, 64.0F, 64.0F, 128.0F, 128.0F, ORB_IMG_SCALE, ORB_IMG_SCALE, angle5, 0, 0, 128, 128, false, false);
-		    
-		    sb.draw(energyLayers.get(5), panel.current_x - 64.0F, panel.current_y - 64.0F, 64.0F, 64.0F, 128.0F, 128.0F, ORB_IMG_SCALE, ORB_IMG_SCALE, 0.0F, 0, 0, 128, 128, false, false);
-		    
-		    
-		} catch (NoSuchFieldException | SecurityException | IllegalArgumentException | IllegalAccessException e) {
-			e.printStackTrace();
-		}
-		
+	@Override
+	public String getAchievementKey()
+	{
+		// Returning null crashes the game, hopefully returning a fake key won't
+		return "MODDING";
 	}
 
-	public void renderDisabledOrb(EnergyPanel panel, SpriteBatch sb) {
-		Field orb_scale, orb_angle_1, orb_angle_2, orb_angle_3,
-				orb_angle_4, orb_angle_5;
-		
-		try {
-			// access private fields off the EnergyPanel
-			orb_scale = panel.getClass().getDeclaredField("ORB_IMG_SCALE");
-			orb_scale.setAccessible(true);
-			float ORB_IMG_SCALE = orb_scale.getFloat(panel);
-			
-			orb_angle_1 = panel.getClass().getDeclaredField("angle1");
-			orb_angle_1.setAccessible(true);
-			
-			float angle1 = orb_angle_1.getFloat(panel);
-			
-			orb_angle_2 = panel.getClass().getDeclaredField("angle2");
-			orb_angle_2.setAccessible(true);
-			
-			float angle2 = orb_angle_2.getFloat(panel);
-			
-			orb_angle_3 = panel.getClass().getDeclaredField("angle3");
-			orb_angle_3.setAccessible(true);
-			
-			float angle3 = orb_angle_3.getFloat(panel);
-			
-			orb_angle_4 = panel.getClass().getDeclaredField("angle4");
-			orb_angle_4.setAccessible(true);
-			
-			float angle4 = orb_angle_4.getFloat(panel);
-			
-			orb_angle_5 = panel.getClass().getDeclaredField("angle5");
-			orb_angle_5.setAccessible(true);
-			
-			float angle5 = orb_angle_5.getFloat(panel);
-			
-			if (energyLayerSpeeds != null) {
-				angles[4] += Gdx.graphics.getDeltaTime() * energyLayerSpeeds[5];
-				angles[3] += Gdx.graphics.getDeltaTime() * energyLayerSpeeds[6];
-				angles[2] += Gdx.graphics.getDeltaTime() * energyLayerSpeeds[7];
-				angles[1] += Gdx.graphics.getDeltaTime() * energyLayerSpeeds[8];
-				angles[0] += Gdx.graphics.getDeltaTime() * energyLayerSpeeds[9];
-				angle5 = angles[4];
-				angle4 = angles[3];
-				angle3 = angles[2];
-				angle2 = angles[1];
-				angle1 = angles[0];
+	@Override
+	public ArrayList<AbstractCard> getCardPool(ArrayList<AbstractCard> tmpPool)
+	{
+		AbstractCard.CardColor color = getCardColor();
+		for (Map.Entry<String, AbstractCard> c : CardLibrary.cards.entrySet()) {
+			AbstractCard card = c.getValue();
+			if (card.color.equals(color) && card.rarity != AbstractCard.CardRarity.BASIC &&
+					(!UnlockTracker.isCardLocked(c.getKey()) || Settings.isDailyRun)) {
+				tmpPool.add(card);
 			}
-			
-			// actual rendering code
-			sb.setColor(Color.WHITE);
-		    sb.draw(energyLayers.get(6), panel.current_x - 64.0F, panel.current_y - 64.0F, 64.0F, 64.0F, 128.0F, 128.0F, ORB_IMG_SCALE, ORB_IMG_SCALE, angle1, 0, 0, 128, 128, false, false);
-		    
-		    sb.draw(energyLayers.get(7), panel.current_x - 64.0F, panel.current_y - 64.0F, 64.0F, 64.0F, 128.0F, 128.0F, ORB_IMG_SCALE, ORB_IMG_SCALE, angle2, 0, 0, 128, 128, false, false);
-		    
-		    sb.draw(energyLayers.get(8), panel.current_x - 64.0F, panel.current_y - 64.0F, 64.0F, 64.0F, 128.0F, 128.0F, ORB_IMG_SCALE, ORB_IMG_SCALE, angle3, 0, 0, 128, 128, false, false);
-		    
-		    sb.draw(energyLayers.get(9), panel.current_x - 64.0F, panel.current_y - 64.0F, 64.0F, 64.0F, 128.0F, 128.0F, ORB_IMG_SCALE, ORB_IMG_SCALE, angle4, 0, 0, 128, 128, false, false);
-		    
-		    sb.draw(energyLayers.get(10), panel.current_x - 64.0F, panel.current_y - 64.0F, 64.0F, 64.0F, 128.0F, 128.0F, ORB_IMG_SCALE, ORB_IMG_SCALE, angle5, 0, 0, 128, 128, false, false);
-		    
-		    sb.draw(energyLayers.get(5), panel.current_x - 64.0F, panel.current_y - 64.0F, 64.0F, 64.0F, 128.0F, 128.0F, ORB_IMG_SCALE, ORB_IMG_SCALE, 0.0F, 0, 0, 128, 128, false, false);
-		} catch (NoSuchFieldException | SecurityException | IllegalArgumentException | IllegalAccessException e) {
-			e.printStackTrace();
 		}
-		
+		return tmpPool;
+	}
+
+	@Override
+	public String getLeaderboardCharacterName()
+	{
+		// This is never called
+		// The one place it's called is gated behind an isModded check
+		return null;
+	}
+
+	@Override
+	public Texture getEnergyImage()
+	{
+		if (energyOrb instanceof CustomEnergyOrb) {
+			return ((CustomEnergyOrb) energyOrb).getEnergyImage();
+		}
+		throw new RuntimeException();
+	}
+
+	@Override
+	public TextureAtlas.AtlasRegion getOrb()
+	{
+		return BaseMod.getCardEnergyOrbAtlasRegion(getCardColor());
+	}
+
+	@Override
+	public void renderOrb(SpriteBatch sb, boolean enabled, float current_x, float current_y)
+	{
+		energyOrb.renderOrb(sb, enabled, current_x, current_y);
+	}
+
+	@Override
+	public void updateOrb(int energyCount)
+	{
+		energyOrb.updateOrb(energyCount);
+	}
+
+	@Override
+	public String getSaveFilePath()
+	{
+		return SaveAndContinue.getPlayerSavePath(chosenClass);
+	}
+
+	@Override
+	public Prefs getPrefs()
+	{
+		if (prefs == null) {
+			logger.error("prefs need to be initialized first!");
+		}
+		return prefs;
+	}
+
+	@Override
+	public void loadPrefs()
+	{
+		if (prefs == null) {
+			prefs = SaveHelper.getPrefs(chosenClass.name());
+		}
+	}
+
+	@Override
+	public CharStat getCharStat()
+	{
+		return charStat;
+	}
+
+	@Override
+	public int getUnlockedCardCount()
+	{
+		// TODO
+		return 0;
+	}
+
+	@Override
+	public int getSeenCardCount()
+	{
+		return BaseMod.getSeenCardCount(getCardColor());
+	}
+
+	@Override
+	public int getCardCount()
+	{
+		return BaseMod.getCardCount(getCardColor());
+	}
+
+	@Override
+	public boolean saveFileExists()
+	{
+		return SaveAndContinue.saveExistsAndNotCorrupted(this);
+	}
+
+	@Override
+	public String getWinStreakKey()
+	{
+		// The only places this is called then pass it to Steam integration
+		// I'm uncertain what Steam will do with these unofficial keys
+		return "win_streak_" + chosenClass.name();
+	}
+
+	@Override
+	public String getLeaderboardWinStreakKey()
+	{
+		// This is never called
+		// The one place it's called is gated behind an isModded check
+		return chosenClass.name() + "_CONSECUTIVE_WINS";
+	}
+
+	@Override
+	public void renderStatScreen(SpriteBatch sb, float screenX, float screenY)
+	{
+		StatsScreen.renderHeader(sb, BaseMod.colorString(getLocalizedCharacterName(), "#" + getCardColor().toString()), screenX, screenY);
+		getCharStat().render(sb, screenX, screenY);
+	}
+
+	@Override
+	public Texture getCustomModeCharacterButtonImage()
+	{
+		Pixmap pixmap = new Pixmap(Gdx.files.internal(BaseMod.getPlayerButton(chosenClass)));
+		Pixmap small = new Pixmap(128, 128, pixmap.getFormat());
+		small.drawPixmap(pixmap,
+				0, 0, pixmap.getWidth(), pixmap.getHeight(),
+				20, 20, small.getWidth()-40, small.getHeight()-40);
+		Texture texture = new Texture(small);
+		pixmap.dispose();
+		small.dispose();
+		return texture;
+	}
+
+	@Override
+	public CharacterStrings getCharacterString()
+	{
+		CharSelectInfo loadout = getLoadout();
+		CharacterStrings characterStrings = new CharacterStrings();
+		characterStrings.NAMES = new String[]{loadout.name};
+		characterStrings.TEXT = new String[]{loadout.flavorText};
+		return characterStrings;
+	}
+
+	@Override
+	public void refreshCharStat()
+	{
+		charStat = new CharStat(this);
 	}
 }

@@ -25,6 +25,9 @@ public class ModalChoiceScreen
     private float showTimer;
     private CardGroup savedHand;
 
+    private CardGroup exhaustCardGroup;
+    private AbstractCard exhaustCard;
+
     public void open(List<AbstractCard> cards, String header)
     {
         PAD_X = 40.0f * Settings.scale;
@@ -62,6 +65,10 @@ public class ModalChoiceScreen
         AbstractDungeon.dynamicBanner.hide();
         AbstractDungeon.screen = AbstractDungeon.CurrentScreen.NONE;
         AbstractDungeon.isScreenUp = false;
+
+        if (exhaustCardGroup != null) {
+            exhaustCardGroup.moveToExhaustPile(exhaustCard);
+        }
     }
 
     private void fakeClose()
@@ -69,6 +76,12 @@ public class ModalChoiceScreen
         AbstractDungeon.overlayMenu.endTurnButton.disable();
         AbstractDungeon.screen = AbstractDungeon.CurrentScreen.NONE;
         AbstractDungeon.isScreenUp = false;
+    }
+
+    public void delayExhaust(CardGroup group, AbstractCard card)
+    {
+        exhaustCardGroup = group;
+        exhaustCard = card;
     }
 
     public void update()

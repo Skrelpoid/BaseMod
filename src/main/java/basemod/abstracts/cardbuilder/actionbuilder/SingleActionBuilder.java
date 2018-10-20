@@ -1,12 +1,11 @@
 package basemod.abstracts.cardbuilder.actionbuilder;
 
-import java.util.function.Function;
-
+import basemod.abstracts.cardbuilder.CardBasic;
 import com.megacrit.cardcrawl.actions.AbstractGameAction;
 import com.megacrit.cardcrawl.characters.AbstractPlayer;
 import com.megacrit.cardcrawl.monsters.AbstractMonster;
 
-import basemod.abstracts.cardbuilder.CardBasic;
+import java.util.function.Function;
 
 public class SingleActionBuilder extends ActionBuilder {
 	

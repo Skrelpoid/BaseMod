@@ -1,9 +1,7 @@
 package basemod.abstracts.cardbuilder;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.function.Supplier;
-
+import basemod.abstracts.CustomCard;
+import basemod.abstracts.cardbuilder.actionbuilder.ActionBuilder;
 import com.megacrit.cardcrawl.actions.AbstractGameAction.AttackEffect;
 import com.megacrit.cardcrawl.actions.common.DamageAction;
 import com.megacrit.cardcrawl.actions.common.DamageAllEnemiesAction;
@@ -15,8 +13,9 @@ import com.megacrit.cardcrawl.characters.AbstractPlayer;
 import com.megacrit.cardcrawl.dungeons.AbstractDungeon;
 import com.megacrit.cardcrawl.monsters.AbstractMonster;
 
-import basemod.abstracts.CustomCard;
-import basemod.abstracts.cardbuilder.actionbuilder.ActionBuilder;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Supplier;
 
 public class CardBasic extends CustomCard {
 

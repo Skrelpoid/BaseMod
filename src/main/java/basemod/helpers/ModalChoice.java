@@ -2,8 +2,10 @@ package basemod.helpers;
 
 import basemod.BaseMod;
 import basemod.abstracts.DynamicVariable;
+import com.megacrit.cardcrawl.actions.AbstractGameAction;
 import com.megacrit.cardcrawl.cards.AbstractCard;
 import com.megacrit.cardcrawl.characters.AbstractPlayer;
+import com.megacrit.cardcrawl.dungeons.AbstractDungeon;
 import com.megacrit.cardcrawl.monsters.AbstractMonster;
 
 import java.util.ArrayList;
@@ -37,7 +39,7 @@ public class ModalChoice
     {
         List<AbstractCard> cards_copy = new ArrayList<>(cards.size());
         for (AbstractCard c : cards) {
-            AbstractCard copy = c.makeCopy();
+            AbstractCard copy = c.makeStatEquivalentCopy();
             copy.dontTriggerOnUseCard = true;
             if (copy.type != AbstractCard.CardType.POWER) {
                 copy.purgeOnUse = true;
@@ -47,7 +49,15 @@ public class ModalChoice
             cards_copy.add(copy);
         }
 
-        BaseMod.modalChoiceScreen.open(cards_copy, title);
+        AbstractDungeon.actionManager.addToBottom(new AbstractGameAction()
+        {
+            @Override
+            public void update()
+            {
+                BaseMod.modalChoiceScreen.open(cards_copy, title);
+                isDone = true;
+            }
+        });
     }
 
     public List<TooltipInfo> generateTooltips()

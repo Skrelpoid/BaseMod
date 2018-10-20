@@ -1,12 +1,12 @@
 package basemod;
 
-import java.util.function.Consumer;
-
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.megacrit.cardcrawl.core.Settings;
 import com.megacrit.cardcrawl.helpers.FontHelper;
+
+import java.util.function.Consumer;
 
 public class ModLabel implements IUIElement{
     private Consumer<ModLabel> update;

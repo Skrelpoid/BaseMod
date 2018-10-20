@@ -1,13 +1,12 @@
 package basemod.patches.com.megacrit.cardcrawl.screens.options.SettingsScreen;
 
+import basemod.BaseMod;
 import com.badlogic.gdx.Gdx;
 import com.evacipated.cardcrawl.modthespire.lib.SpireInsertPatch;
 import com.evacipated.cardcrawl.modthespire.lib.SpirePatch;
 import com.megacrit.cardcrawl.characters.AbstractPlayer;
 import com.megacrit.cardcrawl.dungeons.AbstractDungeon;
 import com.megacrit.cardcrawl.screens.options.SettingsScreen;
-
-import basemod.BaseMod;
 
 @SpirePatch(cls="com.megacrit.cardcrawl.screens.options.SettingsScreen", method="popup")
 public class PopupSwitch {

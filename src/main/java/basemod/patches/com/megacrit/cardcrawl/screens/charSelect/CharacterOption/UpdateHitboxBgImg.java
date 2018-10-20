@@ -5,11 +5,16 @@ import com.badlogic.gdx.graphics.Texture;
 import com.evacipated.cardcrawl.modthespire.lib.SpirePatch;
 import com.megacrit.cardcrawl.characters.AbstractPlayer;
 import com.megacrit.cardcrawl.core.CardCrawlGame;
+import com.megacrit.cardcrawl.helpers.ImageMaster;
+import com.megacrit.cardcrawl.screens.charSelect.CharacterOption;
 import javassist.CannotCompileException;
 import javassist.expr.ExprEditor;
 import javassist.expr.FieldAccess;
 
-@SpirePatch(cls="com.megacrit.cardcrawl.screens.charSelect.CharacterOption", method="updateHitbox")
+@SpirePatch(
+		clz=CharacterOption.class,
+		method="updateHitbox"
+)
 public class UpdateHitboxBgImg {
 
 	public static ExprEditor Instrument()
@@ -18,20 +23,20 @@ public class UpdateHitboxBgImg {
 			@Override
 			public void edit(FieldAccess f) throws CannotCompileException {
 				if (f.getFieldName().equals("bgCharImg") && f.isWriter()) {
-					f.replace("$proceed(basemod.patches.com.megacrit.cardcrawl.screens.charSelect.CharacterOption.UpdateHitboxBgImg.getPlayerPortrait($1));");
+					f.replace("$proceed(" + UpdateHitboxBgImg.class.getName() + ".getPlayerPortrait($1));");
 				}
 			}
 		};
 	}
 
+	@SuppressWarnings("unused")
 	public static Texture getPlayerPortrait(Object original)
 	{
 		AbstractPlayer.PlayerClass chosenClass = CardCrawlGame.chosenCharacter;
 		if (BaseMod.isBaseGameCharacter(chosenClass)) {
 			return (Texture)original;
 		} else {
-			return new Texture(BaseMod.getPlayerPortrait(chosenClass.toString()));
+			return ImageMaster.loadImage(BaseMod.getPlayerPortrait(chosenClass));
 		}
 	}
-	
 }

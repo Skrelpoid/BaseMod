@@ -1,7 +1,8 @@
 package basemod.interfaces;
 
-import java.util.ArrayList;
+import com.megacrit.cardcrawl.cards.CardGroup;
+import com.megacrit.cardcrawl.characters.AbstractPlayer;
 
 public interface PostCreateStartingDeckSubscriber extends ISubscriber {
-	boolean receivePostCreateStartingDeck(ArrayList<String> addCardsToMe);
+	void receivePostCreateStartingDeck(AbstractPlayer.PlayerClass chosenClass, CardGroup addCardsToMe);
 }

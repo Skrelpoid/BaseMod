@@ -82,6 +82,7 @@ public class RenderDescriptionEnergy
     public static class AlterEnergyKeyword
     {
         @SpireInsertPatch(
+                locator=Locator.class,
                 localvars={"word"}
         )
         public static void Insert(AbstractCard __instance, String word)
@@ -91,7 +92,7 @@ public class RenderDescriptionEnergy
             }
         }
 
-        public static class Locator extends SpireInsertLocator
+        private static class Locator extends SpireInsertLocator
         {
             public int[] Locate(CtBehavior ctMethodToPatch) throws CannotCompileException, PatchingException
             {

@@ -1,20 +1,19 @@
 package basemod.abstracts;
 
-import java.util.HashMap;
-import java.util.List;
-
+import basemod.BaseMod;
+import basemod.ReflectionHacks;
+import basemod.helpers.BaseModCardTags;
 import basemod.helpers.TooltipInfo;
-
-import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas.AtlasRegion;
 import com.megacrit.cardcrawl.cards.AbstractCard;
 import com.megacrit.cardcrawl.characters.AbstractPlayer;
+import com.megacrit.cardcrawl.helpers.ImageMaster;
 import com.megacrit.cardcrawl.monsters.AbstractMonster;
 
-import basemod.BaseMod;
-import basemod.ReflectionHacks;
+import java.util.HashMap;
+import java.util.List;
 
 public abstract class CustomCard extends AbstractCard {
 	
@@ -32,7 +31,7 @@ public abstract class CustomCard extends AbstractCard {
 		System.out.println("Finding texture: " + newPath);
 		Texture portraitTexture;
 		try {
-			portraitTexture = new Texture(newPath);
+			portraitTexture = ImageMaster.loadImage(newPath);
 		} catch (Exception e) {
 			portraitTexture = null;
 		}
@@ -41,7 +40,7 @@ public abstract class CustomCard extends AbstractCard {
 	
 	private static void loadTextureFromString(String textureString) {
 		if (!imgMap.containsKey(textureString)) {
-			imgMap.put(textureString, new Texture(Gdx.files.internal(textureString)));
+			imgMap.put(textureString, ImageMaster.loadImage(textureString));
 		}
 	}
 	
@@ -49,7 +48,16 @@ public abstract class CustomCard extends AbstractCard {
 		loadTextureFromString(textureString);
 		return imgMap.get(textureString);
 	}
-	
+
+	@Override
+	public AbstractCard makeCopy() {
+		try{
+			return this.getClass().newInstance();
+		}catch(InstantiationException | IllegalAccessException e) {
+			throw new RuntimeException("BaseMod failed to auto-generate makeCopy for card: " + cardID);
+		}
+	}
+
 	static {
 		imgMap = new HashMap<>();
 	}
@@ -63,11 +71,6 @@ public abstract class CustomCard extends AbstractCard {
 	public String textureBannerSmallImg = null;
 	public String textureBannerLargeImg = null;
 
-	@Deprecated
-	public CustomCard(String id, String name, String img, int cost, String rawDescription, CardType type, CardColor color, CardRarity rarity, CardTarget target, int cardPool) {
-		this(id, name, img, cost, rawDescription, type, color, rarity, target);
-	}
-	
 	public CustomCard(String id, String name, String img, int cost, String rawDescription, CardType type, CardColor color, CardRarity rarity, CardTarget target) {
 		super(id, name, "status/beta", "status/beta", cost, rawDescription, type, color, rarity, target);
 		
@@ -83,7 +86,7 @@ public abstract class CustomCard extends AbstractCard {
 	
 	public Texture getOrbSmallTexture() {
 		if (textureOrbSmallImg == null) {
-			return BaseMod.getEnergyOrbTexture(this.color.toString());
+			return BaseMod.getEnergyOrbTexture(this.color);
 		}
 		
 		return getTextureFromString(textureOrbSmallImg);
@@ -91,7 +94,7 @@ public abstract class CustomCard extends AbstractCard {
 	
 	public Texture getOrbLargeTexture() {
 		if (textureOrbLargeImg == null) {
-			return BaseMod.getEnergyOrbPortraitTexture(this.color.toString());
+			return BaseMod.getEnergyOrbPortraitTexture(this.color);
 		}
 		
 		return getTextureFromString(textureOrbLargeImg);
@@ -113,11 +116,11 @@ public abstract class CustomCard extends AbstractCard {
 		if (textureBackgroundSmallImg == null) {
 			switch (this.type) {
 			case ATTACK:
-				return BaseMod.getAttackBgTexture(this.color.toString());
+				return BaseMod.getAttackBgTexture(this.color);
 			case POWER:
-				return BaseMod.getPowerBgTexture(this.color.toString());
+				return BaseMod.getPowerBgTexture(this.color);
 			default:
-				return BaseMod.getSkillBgTexture(this.color.toString());
+				return BaseMod.getSkillBgTexture(this.color);
 			}
 		}
 		
@@ -128,11 +131,11 @@ public abstract class CustomCard extends AbstractCard {
 		if (textureBackgroundLargeImg == null) {
 			switch (this.type) {
 			case ATTACK:
-				return BaseMod.getAttackBgPortraitTexture(this.color.toString());
+				return BaseMod.getAttackBgPortraitTexture(this.color);
 			case POWER:
-				return BaseMod.getPowerBgPortraitTexture(this.color.toString());
+				return BaseMod.getPowerBgPortraitTexture(this.color);
 			default:
-				return BaseMod.getSkillBgPortraitTexture(this.color.toString());
+				return BaseMod.getSkillBgPortraitTexture(this.color);
 			}
 		}
 		
@@ -203,7 +206,7 @@ public abstract class CustomCard extends AbstractCard {
 		if (imgMap.containsKey(img)) {
 			cardTexture = imgMap.get(img);
 		} else {
-			cardTexture = new Texture(img);
+			cardTexture = ImageMaster.loadImage(img);
 			imgMap.put(img, cardTexture);
 		}
 		cardTexture.setFilter(Texture.TextureFilter.Linear,  Texture.TextureFilter.Linear);
@@ -216,5 +219,17 @@ public abstract class CustomCard extends AbstractCard {
 	public List<TooltipInfo> getCustomTooltips()
 	{
 		return null;
+	}
+	
+	//
+	// For events that care about Strikes and Defends
+	//
+	
+	public boolean isStrike() {
+		return hasTag(BaseModCardTags.BASIC_STRIKE);
+	}
+	
+	public boolean isDefend() {
+		return hasTag(BaseModCardTags.BASIC_DEFEND);
 	}
 }
