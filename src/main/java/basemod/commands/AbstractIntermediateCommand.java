@@ -90,6 +90,14 @@ public abstract class AbstractIntermediateCommand implements CustomCommand {
 	public void putSubCommand(String token, CustomCommand cmd) {
 		subCommands.put(token, cmd);
 	}
+	/**
+	 * Returns the command mapped by the specified token, or null if it is not mapped
+	 * @param token the token that maps the command
+	 * @return null, or a command thats mapped by the specified token
+	 */
+	public CustomCommand getSubCommandFor(String token) {
+		return subCommands.get(token);
+	}
 	
 	/**
 	 * removes the command identified by the token from the map of subcommands
@@ -110,11 +118,25 @@ public abstract class AbstractIntermediateCommand implements CustomCommand {
 	}
 	
 	/**
+	 * @return the default sub command, which will be chained if it is not null and teh token is not mapped by this command
+	 */
+	public CustomCommand getDefaultSubCommand() {
+		return defaultSubCommand;
+	}
+	
+	/**
 	 * Sets the end command. This end command will be run from the run method if shouldRunEndCommand returns true.
 	 * 
 	 * @param cmd the end command to run when shouldRunEndCommand is true
 	 */
 	public void setEndCommand(AbstractEndCommand cmd) {
 		endCommand = cmd;
+	}
+	
+	/**
+	 * Gets the end command. This end command will be run from the run method if shouldRunEndCommand returns true.
+	 */
+	public AbstractEndCommand getEndCommand() {
+		return endCommand;
 	}
 }
