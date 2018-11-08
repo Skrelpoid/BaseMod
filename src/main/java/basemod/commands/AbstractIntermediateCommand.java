@@ -31,7 +31,11 @@ public abstract class AbstractIntermediateCommand implements CustomCommand {
 	@Override
 	public CustomCommand run(String token, String fullCommand[]) throws UnsupportedCommandException {
 		if (shouldRunEndCommand(token, fullCommand)) {
-			return endCommand;
+			if (endCommand != null) {
+				token = endCommand.transformToken(token);
+				endCommand.checkCanRun(token);
+				return endCommand.run(token, fullCommand);
+			}
 		}
 		CustomCommand nextCommandInChain = subCommands.get(token);
 		if (nextCommandInChain == null) {
@@ -106,9 +110,9 @@ public abstract class AbstractIntermediateCommand implements CustomCommand {
 	}
 	
 	/**
-	 * Sets the end command. This end command will be chained from the run method if shouldRunEndCommand returns true.
+	 * Sets the end command. This end command will be run from the run method if shouldRunEndCommand returns true.
 	 * 
-	 * @param cmd the end command to chain when shouldRunEndCommand is true
+	 * @param cmd the end command to run when shouldRunEndCommand is true
 	 */
 	public void setEndCommand(AbstractEndCommand cmd) {
 		endCommand = cmd;
