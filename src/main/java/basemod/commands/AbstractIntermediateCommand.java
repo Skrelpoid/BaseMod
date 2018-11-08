@@ -104,4 +104,13 @@ public abstract class AbstractIntermediateCommand implements CustomCommand {
 	public void setDefaultSubCommand(CustomCommand cmd) {
 		this.defaultSubCommand = cmd;
 	}
+	
+	/**
+	 * Sets the end command. This end command will be chained from the run method if shouldRunEndCommand returns true.
+	 * 
+	 * @param cmd the end command to chain when shouldRunEndCommand is true
+	 */
+	public void setEndCommand(AbstractEndCommand cmd) {
+		endCommand = cmd;
+	}
 }
