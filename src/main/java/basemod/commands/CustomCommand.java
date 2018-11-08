@@ -22,8 +22,8 @@ public abstract interface CustomCommand {
 	public void checkCanRun(String token) throws UnsupportedCommandException;
 	
 	/**
-	 * This method gets called before the token is passed to the run method. It transform a token so it can be understood
-	 * by the run method. Example use cases would be making a string all lower case or looking up ids that were written with
+	 * This method gets called before the token is passed to the checkCanRun method. It transform a token so it can be understood
+	 * by the run and the checkCanRun method. Example use cases would be making a string all lower case or looking up ids that were written with
 	 * underscores.
 	 * 
 	 * IMPORTANT: The default implementation transforms all tokens to be lower case! If this is not wanted, override this method
