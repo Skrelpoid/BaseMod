@@ -4,12 +4,14 @@ import java.util.Collection;
 import java.util.function.BiPredicate;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
+import java.util.function.UnaryOperator;
 
 public class SimpleIntermediateCommand extends AbstractIntermediateCommand {
 
 	private Supplier<Collection<String>> possibleSubCommands;
 	private Consumer<String> canRunChecker;
 	private BiPredicate<String, String[]> endCommandChecker;
+	private UnaryOperator<String> tokenTransformer;
 
 	public SimpleIntermediateCommand() {
 		super();
@@ -90,5 +92,18 @@ public class SimpleIntermediateCommand extends AbstractIntermediateCommand {
 	 */
 	public void setEndCommandChecker(BiPredicate<String, String[]> endCommandChecker) {
 		this.endCommandChecker = endCommandChecker;
+	}
+	
+	@Override
+	public String transformToken(String token) {
+		return tokenTransformer == null ? super.transformToken(token) : tokenTransformer.apply(token);
+	}
+	
+	/**
+	 * Set the token transformer, which transforms a token before it is passed to the run method. Id this is not set, or null 
+	 * gets passed, the default implementation will be used, which converts the String to lower case
+	 */
+	public void setTokenTransformer(UnaryOperator<String> transformer) {
+		tokenTransformer = transformer;
 	}
 }

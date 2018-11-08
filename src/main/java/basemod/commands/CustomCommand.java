@@ -32,7 +32,7 @@ public abstract interface CustomCommand {
 	 * @return the transformed token
 	 */
 	public default String transformToken(String token) {
-		return token.toLowerCase(Locale.ENGLISH);
+		return token.toLowerCase(Locale.ROOT);
 	}
 	
 }
