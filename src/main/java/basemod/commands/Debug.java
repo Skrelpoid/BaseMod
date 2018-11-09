@@ -19,7 +19,10 @@ public class Debug extends AbstractIntermediateCommand {
 	
 	@Override
 	public String defaultErrorMessage() {
-		return "could not parse previous command\n" + "options are:\n" + "* true\n" + "* false"; 
+		return "could not parse previous command\n" + 
+				"options are:\n" + 
+				"* true\n" + 
+				"* false"; 
 	}
 
 }
