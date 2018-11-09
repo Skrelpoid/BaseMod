@@ -13,7 +13,8 @@ public abstract class AbstractIntermediateCommand implements CustomCommand {
 	protected Map<String, CustomCommand> subCommands;
 	protected CustomCommand defaultSubCommand;
 	protected AbstractEndCommand endCommand;
-	protected String defaultMessage;
+	protected String defaultAutocompleteMessage;
+	protected String defaultErrorMessage;
 	
 	public AbstractIntermediateCommand() {
 		subCommands = new HashMap<>();
@@ -42,10 +43,16 @@ public abstract class AbstractIntermediateCommand implements CustomCommand {
 			if (defaultSubCommand != null) {
 				nextCommandInChain = defaultSubCommand;
 			} else {
-				throw new UnsupportedCommandException("could not run command");
+				throw new UnsupportedCommandException(defaultErrorMessage());
 			}
 		}
 		return nextCommandInChain;
+	}
+	
+	/** default implementation that does nothing */
+	@Override
+	public void checkCanRun(String token) throws UnsupportedCommandException {
+		
 	}
 	
 	/**
@@ -71,14 +78,22 @@ public abstract class AbstractIntermediateCommand implements CustomCommand {
 	}
 	
 	/**
-	 * The default message is a String that gets displayed on the Autocomplete when no match was
-	 * found. If this is null, the message will be "No Match found". <br>
+	 * The default autocomplete message is a String that gets displayed on the Autocomplete when no match was
+	 * found. If this is null, the message will be "no natch found". <br>
 	 * This can be used to indicate that the possibleSubCommands only include some of real possible
 	 * values. An example usage would be to use this for arbitrary <b>numbers</b> to indicate to the
 	 * user that their input is not wrong.
 	 */
-	public String defaultMessage() {
-		return defaultMessage;
+	public String defaultAutocompleteMessage() {
+		return defaultAutocompleteMessage == null ? "no match found" : defaultAutocompleteMessage;
+	}
+	
+	/**
+	 * The default error message is a String that gets printed to the dev console when a token is not mapped to a command.
+	 * If this is null, the message will be "could not parse previous command". <br>
+	 */
+	public String defaultErrorMessage() {
+		return defaultErrorMessage == null ? "could not parse previous command" : defaultErrorMessage;
 	}
 	
 	/**

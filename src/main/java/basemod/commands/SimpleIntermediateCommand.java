@@ -47,14 +47,24 @@ public class SimpleIntermediateCommand extends AbstractIntermediateCommand {
 	}
 
 	/**
-	 * Sets the default message to the message supplied. The default message is displayed in the dev
-	 * console if the user enters a value for the current token that is not mapped by this command.
+	 * Sets the default autocomplete message to the message supplied. The default message is displayed in the auto cmpletion
+	 * if the user enters a value for the current token that is not mapped by this command.
 	 * This can be used to indicate what the value should be, e.g. a number.
 	 * 
-	 * @param message the default message. If this is null, "No Match found" will be displayed
+	 * @param message the default message. If this is null, "no match found" will be displayed
 	 */
-	public void setDefaultMessage(String message) {
-		this.defaultMessage = message;
+	public void setDefaultAutocompleteMessage(String message) {
+		this.defaultAutocompleteMessage = message;
+	}
+	
+	/**
+	 * Sets the default message to the message supplied. The default message is displayed in the dev
+	 * console if the runs a command that can not be executed
+	 * 
+	 * @param message the default message. If this is null, "could not parse previous command" will be displayed
+	 */
+	public void setDefaultErrorMessage(String message) {
+		this.defaultErrorMessage = message;
 	}
 
 	/**
