@@ -7,7 +7,7 @@ import java.util.function.Consumer;
 public class SimpleEndCommand extends AbstractEndCommand {
 		
 	private BiConsumer<String, String[]> onRun;
-	private Consumer<String> checkCanRun;
+	private Consumer<String> canRunChecker;
 		
 	public SimpleEndCommand (BiConsumer<String, String[]> onRun) {
 		this.onRun = Objects.requireNonNull(onRun, "The onRun Consumer must not be null!");
@@ -22,8 +22,22 @@ public class SimpleEndCommand extends AbstractEndCommand {
 		return null;
 	}
 	
+	/**
+	 * Sets the consumer that will be run in the checkCanRun method. If this is null, checkCanRun
+	 * will always succeed
+	 * 
+	 * @param checker a Consumer that takes the current token as its argument. To indicate that a
+	 *        command can not be run, an UnsupportedCommandException should be thrown with a message
+	 *        that displays in the dev console
+	 */
+	public void setCanRunChecker(Consumer<String> canRunChecker) {
+		this.canRunChecker = canRunChecker;
+	}
+	
 	@Override
 	public void checkCanRun(String token) throws InvalidCommandException {
-		checkCanRun.accept(token);
+		if (canRunChecker != null) {
+			canRunChecker.accept(token);
+		}
 	}
 }
