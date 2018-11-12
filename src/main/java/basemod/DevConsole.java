@@ -1,9 +1,6 @@
 package basemod;
 
-import basemod.commands.AbstractIntermediateCommand;
-import basemod.commands.CustomCommand;
 import basemod.commands.SimpleIntermediateCommand;
-import basemod.commands.UnsupportedCommandException;
 import basemod.helpers.ConvertHelper;
 import basemod.interfaces.PostEnergyRechargeSubscriber;
 import basemod.interfaces.PostInitializeSubscriber;

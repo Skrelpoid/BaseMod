@@ -71,7 +71,7 @@ public class SimpleIntermediateCommand extends AbstractIntermediateCommand {
 	 * Checks if this command can be run using the canRunChecker
 	 */
 	@Override
-	public void checkCanRun(String token) throws UnsupportedCommandException {
+	public void checkCanRun(String token) throws InvalidCommandException {
 		if (canRunChecker != null) {
 			canRunChecker.accept(token);
 		}

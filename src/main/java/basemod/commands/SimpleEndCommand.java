@@ -23,7 +23,7 @@ public class SimpleEndCommand extends AbstractEndCommand {
 	}
 	
 	@Override
-	public void checkCanRun(String token) throws UnsupportedCommandException {
+	public void checkCanRun(String token) throws InvalidCommandException {
 		checkCanRun.accept(token);
 	}
 }

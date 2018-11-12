@@ -16,10 +16,10 @@ public abstract interface CustomCommand {
 	 * Checks if the command can be run. This is will be called before each command in the chain, to check if
 	 * the command can be run in the current circumstances
 	 * @param token the current token
-	 * @throws UnsupportedCommandException this is the exception that should be thrown if the command can not be run.
+	 * @throws InvalidCommandException this is the exception that should be thrown if the command can not be run.
 	 * The message of the exception will be displayed to the user in the dev console
 	 */
-	public void checkCanRun(String token) throws UnsupportedCommandException;
+	public void checkCanRun(String token) throws InvalidCommandException;
 	
 	/**
 	 * This method gets called before the token is passed to the checkCanRun method. It transform a token so it can be understood

@@ -29,11 +29,11 @@ public abstract class AbstractIntermediateCommand implements CustomCommand {
 	 * to it, this method will throw an UnsupportedCommandException
 	 * 
 	 * @param token the current token of the command chain.
-	 * @throws UnsupportedCommandException if there is no defaultSubCommand and the token has no
+	 * @throws InvalidCommandException if there is no defaultSubCommand and the token has no
 	 *         command mapped to it
 	 */
 	@Override
-	public CustomCommand run(String token, String fullCommand[]) throws UnsupportedCommandException {
+	public CustomCommand run(String token, String fullCommand[]) throws InvalidCommandException {
 		if (shouldRunEndCommand(token, fullCommand)) {
 			if (endCommand != null) {
 				token = endCommand.transformToken(token);
@@ -46,7 +46,7 @@ public abstract class AbstractIntermediateCommand implements CustomCommand {
 			if (defaultSubCommand != null) {
 				nextCommandInChain = defaultSubCommand;
 			} else {
-				throw new UnsupportedCommandException(defaultErrorMessage());
+				throw new InvalidCommandException(defaultErrorMessage());
 			}
 		}
 		return nextCommandInChain;
@@ -54,7 +54,7 @@ public abstract class AbstractIntermediateCommand implements CustomCommand {
 	
 	/** default implementation that does nothing */
 	@Override
-	public void checkCanRun(String token) throws UnsupportedCommandException {
+	public void checkCanRun(String token) throws InvalidCommandException {
 		
 	}
 	
