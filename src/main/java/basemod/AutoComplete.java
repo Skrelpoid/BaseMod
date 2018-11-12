@@ -345,11 +345,11 @@ public class AutoComplete {
 		implementedYet = true;
 		commandComplete = false;
 		if (whiteSpaces == 0) {
-			alreadySorted = true;
 			if (currentID != CMDS) {
 				currentID = CMDS;
 				suggestions.clear();
 				suggestions.addAll(Arrays.asList(COMMANDS));
+				suggestions.addAll(DevConsole.commandRoot.possibleSubCommands());
 			}
 		} else {
 			switch (tokens[0].toLowerCase()) {
@@ -436,10 +436,10 @@ public class AutoComplete {
 				break;
 			}
 			}
-			if (!alreadySorted && currentID != RESET && !commandComplete) {
-				alreadySorted = true;
-				Collections.sort(suggestions, caseInsensitiveCompare);
-			}
+		}
+		if (!alreadySorted && currentID != RESET && !commandComplete) {
+			alreadySorted = true;
+			Collections.sort(suggestions, caseInsensitiveCompare);
 		}
 	}
 	
@@ -449,7 +449,7 @@ public class AutoComplete {
 		alreadySorted = false;
 		currentID = CUSTOM_COMMAND;
 		CustomCommand commandInChain = DevConsole.commandRoot;
-		for (int i = 0; i < tokens.length - 1; i++) {
+		for (int i = 0; i < whiteSpaces; i++) {
 			String currentToken = commandInChain.transformToken(tokens[i]);
 			if (commandInChain instanceof AbstractIntermediateCommand) {
 				AbstractIntermediateCommand cmd = (AbstractIntermediateCommand) commandInChain;

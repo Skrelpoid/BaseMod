@@ -1,5 +1,6 @@
 package basemod;
 
+import basemod.commands.AbstractEndCommand;
 import basemod.commands.AbstractIntermediateCommand;
 import basemod.commands.CustomCommand;
 import basemod.commands.Debug;
@@ -210,9 +211,16 @@ implements PostEnergyRechargeSubscriber, PostInitializeSubscriber, PostRenderSub
 					return;
 				}
 			}
+			if (commandInChain instanceof AbstractEndCommand) {
+				commandInChain.checkCanRun("");
+				commandInChain = commandInChain.run("", tokens);
+			}
+			if (commandInChain instanceof AbstractIntermediateCommand) {
+				logErrorFromCommand(((AbstractIntermediateCommand) commandInChain).defaultErrorMessage());
+			}
 		} catch (Throwable t) {
 			if (t instanceof InvalidCommandException) {
-				log(t.getMessage());
+				logErrorFromCommand(t.getMessage());
 			} else {
 				if (commandInChain instanceof AbstractIntermediateCommand) {
 					logErrorFromCommand(((AbstractIntermediateCommand) commandInChain).defaultErrorMessage());
