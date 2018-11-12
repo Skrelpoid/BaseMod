@@ -1,5 +1,8 @@
 package basemod;
 
+import basemod.commands.AbstractIntermediateCommand;
+import basemod.commands.CustomCommand;
+import basemod.commands.InvalidCommandException;
 import basemod.commands.SimpleIntermediateCommand;
 import basemod.helpers.ConvertHelper;
 import basemod.interfaces.PostEnergyRechargeSubscriber;
@@ -184,9 +187,34 @@ implements PostEnergyRechargeSubscriber, PostInitializeSubscriber, PostRenderSub
 			break;
 		}	
 		default: {
-			log("invalid command");
+			executeCommand(tokens);
 			break;
 		}
+		}
+	}
+	
+	private static void executeCommand(String[] tokens) {
+		CustomCommand commandInChain = commandRoot;
+		try {
+			for (int i = 0; i < tokens.length; i++) {
+				String currentToken = commandInChain.transformToken(tokens[i]);
+				commandInChain.checkCanRun(currentToken);
+				commandInChain = commandInChain.run(currentToken, tokens);
+				if (commandInChain == null) {
+					return;
+				}
+			}
+		} catch (Throwable t) {
+			if (t instanceof InvalidCommandException) {
+				log(t.getMessage());
+			} else {
+				if (commandInChain instanceof AbstractIntermediateCommand) {
+					logErrorFromCommand(((AbstractIntermediateCommand) commandInChain).defaultErrorMessage());
+				} else {
+					log(AbstractIntermediateCommand.COULD_NOT_PARSE);
+				}
+				logger.error("could not parse command", t);
+			}
 		}
 	}
 	
@@ -994,6 +1022,15 @@ implements PostEnergyRechargeSubscriber, PostInitializeSubscriber, PostRenderSub
 	public static void log(@SuppressWarnings("rawtypes") ArrayList list) {
 		for (Object o : list) {
 			log(o.toString());
+		}
+	}
+	
+	public static void logErrorFromCommand(String text) {
+		if (text != null) {
+			String[] lines = text.split(InvalidCommandException.LINE_DELIMITER);
+			for (String line: lines) {
+				log(line);
+			}
 		}
 	}
 
