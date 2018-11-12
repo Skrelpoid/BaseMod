@@ -10,7 +10,9 @@ import com.megacrit.cardcrawl.helpers.CardLibrary;
 import com.megacrit.cardcrawl.helpers.PotionHelper;
 import com.megacrit.cardcrawl.localization.EventStrings;
 import com.megacrit.cardcrawl.localization.LocalizedStrings;
-
+import basemod.commands.AbstractEndCommand;
+import basemod.commands.AbstractIntermediateCommand;
+import basemod.commands.CustomCommand;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -69,6 +71,8 @@ public class AutoComplete {
 	
 	private static final char ID_DELIMITER = ':';
 	private static final String SPACE_AND_ID_DELIMITER = "[ :]";
+	
+	private static AbstractIntermediateCommand lastCommand;
 
 	public static void init() {
 		reset();
@@ -336,6 +340,7 @@ public class AutoComplete {
 	}
 
 	private static void createCMDSuggestions() {
+		lastCommand = null;
 		alreadySorted = false;
 		implementedYet = true;
 		commandComplete = false;
@@ -422,13 +427,12 @@ public class AutoComplete {
 				createMaxHPSuggestions();
 				break;
 			}
-			case "debug":{
+			case "debug": {
 				createDebugSuggestions();
 				break;
 			}
 			default: {
-				noMatch = true;
-				currentID = RESET;
+				customCommandSuggestions();
 				break;
 			}
 			}
@@ -436,6 +440,38 @@ public class AutoComplete {
 				alreadySorted = true;
 				Collections.sort(suggestions, caseInsensitiveCompare);
 			}
+		}
+	}
+	
+	private static final int CUSTOM_COMMAND = ID_CREATOR++;
+	
+	private static void customCommandSuggestions() {
+		alreadySorted = false;
+		currentID = CUSTOM_COMMAND;
+		CustomCommand commandInChain = DevConsole.commandRoot;
+		for (int i = 0; i < tokens.length - 1; i++) {
+			String currentToken = commandInChain.transformToken(tokens[i]);
+			if (commandInChain instanceof AbstractIntermediateCommand) {
+				AbstractIntermediateCommand cmd = (AbstractIntermediateCommand) commandInChain;
+				commandInChain = cmd.getSubCommandFor(currentToken);
+				if (commandInChain == null) {
+					commandInChain = cmd.getDefaultSubCommand();
+				}
+				if (commandInChain == null) {
+					lastCommand = cmd;
+					noMatch = true;
+					currentID = RESET;
+				}
+			}
+			if (commandInChain instanceof AbstractEndCommand) {
+				commandComplete = true;
+				return;
+			}
+		}
+		if (commandInChain instanceof AbstractIntermediateCommand) {
+			lastCommand = (AbstractIntermediateCommand) commandInChain;
+			suggestions.clear();
+			suggestions.addAll(lastCommand.possibleSubCommands());
 		}
 	}
 
@@ -975,6 +1011,9 @@ public class AutoComplete {
 			}
 			if (noMatch && (currentID == SMALL_NUMBERS || currentID == MEDIUM_NUMBERS || currentID == BIG_NUMBERS)) {
 				text = "[Number]";
+			}
+			if (noMatch && lastCommand != null) {
+				text = "[" + lastCommand.defaultAutocompleteMessage() + "]";
 			}
 			if (commandComplete) {
 				text = "[Command is complete]";
