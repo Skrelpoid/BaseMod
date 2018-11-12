@@ -1,5 +1,9 @@
 package basemod;
 
+import basemod.commands.AbstractIntermediateCommand;
+import basemod.commands.CustomCommand;
+import basemod.commands.SimpleIntermediateCommand;
+import basemod.commands.UnsupportedCommandException;
 import basemod.helpers.ConvertHelper;
 import basemod.interfaces.PostEnergyRechargeSubscriber;
 import basemod.interfaces.PostInitializeSubscriber;
@@ -71,10 +75,15 @@ implements PostEnergyRechargeSubscriber, PostInitializeSubscriber, PostRenderSub
 	public static ArrayList<String> log;
 	public static ArrayList<Boolean> prompted;
 	public static int commandPos;
+	
+	public static SimpleIntermediateCommand commandRoot;
 
 	public DevConsole() {
 		BaseMod.subscribe(this);
 
+		commandRoot = new SimpleIntermediateCommand();
+		commandRoot.setDefaultErrorMessage("invalid command");
+		
 		priorCommands = new ArrayList<>();
 		commandPos = -1;
 		log = new ArrayList<>();

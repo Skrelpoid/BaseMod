@@ -5,6 +5,7 @@ import basemod.abstracts.CustomCard;
 import basemod.abstracts.CustomSavableRaw;
 import basemod.abstracts.CustomUnlockBundle;
 import basemod.abstracts.DynamicVariable;
+import basemod.commands.CustomCommand;
 import basemod.helpers.RelicType;
 import basemod.helpers.dynamicvariables.BlockVariable;
 import basemod.helpers.dynamicvariables.DamageVariable;
@@ -2383,6 +2384,18 @@ public class BaseMod {
 		for(PreRoomRenderSubscriber sub : preRoomRenderSubscribers) {
 			sub.receivePreRoomRender(sb);
 		}
+	}
+	
+	public static void addCommand(String name, CustomCommand command) {
+		DevConsole.commandRoot.putSubCommand(name, command);
+	}
+	
+	public static void removeCommand(String name) {
+		DevConsole.commandRoot.removeSubCommand(name);
+	}
+	
+	public static CustomCommand getCommandForName(String name) {
+		return DevConsole.commandRoot.getSubCommandFor(name);
 	}
 
 	//
