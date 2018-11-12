@@ -10,6 +10,9 @@ import java.util.Map;
  * using shouldRunEndCommand, to enable commands with dynamic argument lengths / optional arguments
  */
 public abstract class AbstractIntermediateCommand implements CustomCommand {
+	public static final String COULD_NOT_PARSE = "could not parse previous command";
+	public static final String NO_MATCH = "no match found";
+
 	protected Map<String, CustomCommand> subCommands;
 	protected CustomCommand defaultSubCommand;
 	protected AbstractEndCommand endCommand;
@@ -85,7 +88,7 @@ public abstract class AbstractIntermediateCommand implements CustomCommand {
 	 * user that their input is not wrong.
 	 */
 	public String defaultAutocompleteMessage() {
-		return defaultAutocompleteMessage == null ? "no match found" : defaultAutocompleteMessage;
+		return defaultAutocompleteMessage == null ? NO_MATCH : defaultAutocompleteMessage;
 	}
 	
 	/**
@@ -93,7 +96,7 @@ public abstract class AbstractIntermediateCommand implements CustomCommand {
 	 * If this is null, the message will be "could not parse previous command". <br>
 	 */
 	public String defaultErrorMessage() {
-		return defaultErrorMessage == null ? "could not parse previous command" : defaultErrorMessage;
+		return defaultErrorMessage == null ? COULD_NOT_PARSE : defaultErrorMessage;
 	}
 	
 	/**
