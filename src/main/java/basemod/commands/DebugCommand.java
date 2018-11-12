@@ -3,9 +3,9 @@ package basemod.commands;
 import com.megacrit.cardcrawl.core.Settings;
 import basemod.DevConsole;
 
-public class Debug extends AbstractIntermediateCommand {
+public class DebugCommand extends AbstractIntermediateCommand {
 
-	public Debug() {
+	public DebugCommand() {
 		SimpleEndCommand debugTrue = new SimpleEndCommand((t, c) -> setDebugModeAndLog(true));
 		putSubCommand("true", debugTrue);
 		SimpleEndCommand debugFalse = new SimpleEndCommand((t, c) -> setDebugModeAndLog(false));
