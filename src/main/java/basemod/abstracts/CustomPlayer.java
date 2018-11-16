@@ -244,7 +244,7 @@ public abstract class CustomPlayer extends AbstractPlayer implements ModelRender
 	@Override
 	public void renderStatScreen(SpriteBatch sb, float screenX, float screenY)
 	{
-		StatsScreen.renderHeader(sb, BaseMod.colorString(getLocalizedCharacterName(), "#" + getCardColor().toString()), screenX, screenY);
+		StatsScreen.renderHeader(sb, BaseMod.colorString(getLocalizedCharacterName(), "#" + getCardRenderColor().toString()), screenX, screenY);
 		getCharStat().render(sb, screenX, screenY);
 	}
 

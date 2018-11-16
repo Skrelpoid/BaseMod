@@ -12,16 +12,23 @@ import com.megacrit.cardcrawl.helpers.ImageMaster;
 import com.megacrit.cardcrawl.screens.SingleCardViewPopup;
 import javassist.CannotCompileException;
 import javassist.CtBehavior;
+import javassist.expr.ExprEditor;
+import javassist.expr.MethodCall;
+import org.omg.CORBA.UNKNOWN;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 
-public class BackgroundFix {
-
-	@SpirePatch(cls="com.megacrit.cardcrawl.screens.SingleCardViewPopup",
-			method="renderCardBack")
-	public static class BackgroundTexture {
-		public static void Prefix(Object __obj_instance, Object sbObject) {
+public class BackgroundFix
+{
+	@SpirePatch(
+			clz=SingleCardViewPopup.class,
+			method="renderCardBack"
+	)
+	public static class BackgroundTexture
+	{
+		public static void Prefix(Object __obj_instance, Object sbObject)
+		{
 			try {
 				SingleCardViewPopup popup = (SingleCardViewPopup) __obj_instance;
 				SpriteBatch sb = (SpriteBatch) sbObject;
@@ -32,8 +39,8 @@ public class BackgroundFix {
 				AbstractCard.CardColor color = card.color;
 				switch (card.type) {
 				case ATTACK:
-					if (!color.toString().equals("RED") && !color.toString().equals("GREEN") && !color.toString().equals("BLUE")
-							&& !color.toString().equals("COLORLESS") && !color.toString().equals("CURSE")) {
+					if (color != AbstractCard.CardColor.RED && color != AbstractCard.CardColor.GREEN && color != AbstractCard.CardColor.BLUE
+						&& color != AbstractCard.CardColor.COLORLESS && color != AbstractCard.CardColor.CURSE) {
 						Texture bgTexture = null;
 						if (card instanceof CustomCard) {
 							bgTexture = ((CustomCard) card).getBackgroundLargeTexture();
@@ -49,8 +56,8 @@ public class BackgroundFix {
 					}
 					break;
 				case POWER:
-					if (!color.toString().equals("RED") && !color.toString().equals("GREEN") && !color.toString().equals("BLUE")
-							&& !color.toString().equals("COLORLESS") && !color.toString().equals("CURSE")) {
+					if (color != AbstractCard.CardColor.RED && color != AbstractCard.CardColor.GREEN && color != AbstractCard.CardColor.BLUE
+							&& color != AbstractCard.CardColor.COLORLESS && color != AbstractCard.CardColor.CURSE) {
 						Texture bgTexture = null;
 						if (card instanceof CustomCard) {
 							bgTexture = ((CustomCard) card).getBackgroundLargeTexture();
@@ -104,59 +111,68 @@ public class BackgroundFix {
 		}
 	}
 	
-	@SpirePatch(cls="com.megacrit.cardcrawl.screens.SingleCardViewPopup",
-			method="renderCost")
-	public static class EnergyOrbTexture {
-		
-		@SpireInsertPatch(
-				locator=Locator.class
-		)
-		public static void Insert(Object __obj_instance, Object sbObject) {
-			try {
-				SingleCardViewPopup popup = (SingleCardViewPopup) __obj_instance;
-				SpriteBatch sb = (SpriteBatch) sbObject;
-				Field cardField;
-				cardField = popup.getClass().getDeclaredField("card");
-				cardField.setAccessible(true);
-				AbstractCard card = (AbstractCard) cardField.get(popup);
-				AbstractCard.CardColor color = card.color;
-				if (card.cost > -2) {
-					if (!color.toString().equals("RED") && !color.toString().equals("GREEN") && !color.toString().equals("BLUE")
-							&& !color.toString().equals("COLORLESS") && !color.toString().equals("CURSE")) {
-						Texture orbTexture = null;
-						if(card instanceof CustomCard) {
-							orbTexture = ((CustomCard) card).getOrbLargeTexture();
-						}
-							
-						if(orbTexture == null) {
-							orbTexture = BaseMod.getEnergyOrbPortraitTexture(color);
-							if (orbTexture == null) {
-								orbTexture = ImageMaster.loadImage(BaseMod.getEnergyOrbPortrait(color));
-								BaseMod.saveEnergyOrbPortraitTexture(color, orbTexture);
-							}
-						}
-						
-						sb.draw(orbTexture, Settings.WIDTH / 2.0F - 82.0F - 270.0F * Settings.scale, Settings.HEIGHT / 2.0F - 82.0F + 380.0F * Settings.scale, 82.0F, 82.0F, 164.0F, 164.0F, Settings.scale, Settings.scale, 0.0F, 0, 0, 164, 164, false, false);
+	@SpirePatch(
+			clz=SingleCardViewPopup.class,
+			method="renderCost"
+	)
+	public static class EnergyOrbTexture
+	{
+		public static ExprEditor Instrument()
+		{
+			return new ExprEditor() {
+				@Override
+				public void edit(MethodCall m) throws CannotCompileException
+				{
+					if (m.getClassName().equals(SpriteBatch.class.getName()) && m.getMethodName().equals("draw")) {
+						m.replace(EnergyOrbTexture.class.getName() + ".drawEnergyOrb(card, sb, $$);");
 					}
 				}
-			} catch (NoSuchFieldException | SecurityException | IllegalAccessException e) {
-				e.printStackTrace();
-			}
+			};
 		}
-		
-		private static class Locator extends SpireInsertLocator {
-			public int[] Locate(CtBehavior ctMethodToPatch) throws CannotCompileException, PatchingException
-		{
-			Matcher finalMatcher = new Matcher.FieldAccessMatcher("com.megacrit.cardcrawl.cards.AbstractCard", "color");
 
-			return LineFinder.findInOrder(ctMethodToPatch, new ArrayList<Matcher>(), finalMatcher);
-		}
+		@SuppressWarnings("unused")
+		public static void drawEnergyOrb(AbstractCard card, SpriteBatch sb,
+										 Texture texture,
+										 float x, float y,
+										 float originX, float originY,
+										 float width, float height,
+										 float scaleX, float scaleY,
+										 float rotation,
+										 int srcX, int srcY,
+										 int srcWidth, int srcHeight,
+										 boolean flipX, boolean flipY)
+		{
+			if (card.color != AbstractCard.CardColor.RED && card.color != AbstractCard.CardColor.GREEN && card.color != AbstractCard.CardColor.BLUE
+				&& card.color != AbstractCard.CardColor.COLORLESS && card.color != AbstractCard.CardColor.CURSE) {
+				if (card instanceof CustomCard) {
+					texture = ((CustomCard) card).getOrbLargeTexture();
+				}
+
+				if (texture == null) {
+					texture = BaseMod.getEnergyOrbPortraitTexture(card.color);
+					if (texture == null) {
+						texture = ImageMaster.loadImage(BaseMod.getEnergyOrbPortrait(card.color));
+						BaseMod.saveEnergyOrbPortraitTexture(card.color, texture);
+					}
+				}
+
+				if (texture == null) {
+					texture = ImageMaster.CARD_GRAY_ORB_L;
+				}
+			}
+
+			sb.draw(texture, x, y, originX, originY, width, height, scaleX, scaleY, rotation, srcX, srcY, srcWidth, srcHeight, flipX, flipY);
 		}
 	}
 	
-	@SpirePatch(cls="com.megacrit.cardcrawl.screens.SingleCardViewPopup", method="renderCardBanner")
-	public static class BannerTexture {
-		public static void Replace(Object __obj_instance, SpriteBatch sb) {
+	@SpirePatch(
+			clz=SingleCardViewPopup.class,
+			method="renderCardBanner"
+	)
+	public static class BannerTexture
+	{
+		public static void Replace(Object __obj_instance, SpriteBatch sb)
+		{
 			try {
 				SingleCardViewPopup view = (SingleCardViewPopup)__obj_instance;
 				AbstractCard card;
@@ -173,21 +189,13 @@ public class BackgroundFix {
 				if (card instanceof CustomCard) {
 					bannerTexture = ((CustomCard)card).getBannerLargeTexture();
 				}
-				if(bannerTexture == null) {
-					switch(rarity.toString()) {
-					case "BASIC":
-					case "COMMON":
-					case "CURSE":
-						bannerTexture = ImageMaster.CARD_BANNER_COMMON_L;
-						break;
-					case "UNCOMMON":
+				if (bannerTexture == null) {
+					if (rarity == AbstractCard.CardRarity.UNCOMMON) {
 						bannerTexture = ImageMaster.CARD_BANNER_UNCOMMON_L;
-						break;
-					case "RARE":
+					} else if (rarity == AbstractCard.CardRarity.RARE) {
 						bannerTexture = ImageMaster.CARD_BANNER_RARE_L;
-						break;
-						default:
-							bannerTexture = ImageMaster.CARD_BANNER_COMMON_L;
+					} else {
+						bannerTexture = ImageMaster.CARD_BANNER_COMMON_L;
 					}
 				}
 				sb.draw(bannerTexture, Settings.WIDTH / 2.0f - 512.0f, Settings.HEIGHT / 2.0f - 512.0f, 512.0f, 512.0f, 1024.0f, 1024.0f, 
@@ -196,9 +204,6 @@ public class BackgroundFix {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-			
-			
-			
 		}
 	}
 }

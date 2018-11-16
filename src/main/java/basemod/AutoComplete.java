@@ -6,6 +6,7 @@ import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.megacrit.cardcrawl.core.Settings;
 import com.megacrit.cardcrawl.dungeons.AbstractDungeon;
+import com.megacrit.cardcrawl.helpers.BlightHelper;
 import com.megacrit.cardcrawl.helpers.CardLibrary;
 import com.megacrit.cardcrawl.helpers.PotionHelper;
 import com.megacrit.cardcrawl.localization.EventStrings;
@@ -325,7 +326,7 @@ public class AutoComplete {
 	}
 
 	// if you add a new command here make sure you sort it in alphabetically
-	public static final String[] COMMANDS = { "clear", "debug", "deck", "draw", "energy", "event", "fight", "gold", "hand",
+	public static final String[] COMMANDS = { "blight", "clear", "debug", "deck", "draw", "energy", "event", "fight", "gold", "hand",
 			"help", "hp", "info", "kill", "maxhp", "potion", "power", "relic", "unlock"};
 
 	public static final int CMDS = ID_CREATOR++;
@@ -431,6 +432,9 @@ public class AutoComplete {
 				createDebugSuggestions();
 				break;
 			}
+			case "blight":
+				createBlightSuggestions();
+				break;
 			default: {
 				customCommandSuggestions();
 				break;
@@ -524,6 +528,46 @@ public class AutoComplete {
 		return tokens[1].equalsIgnoreCase("a") || tokens[1].equalsIgnoreCase("add") || tokens[1].equalsIgnoreCase("r")
 				|| tokens[1].equalsIgnoreCase("remove") || tokens[1].equalsIgnoreCase("desc")
 				|| tokens[1].equalsIgnoreCase("flavor") || tokens[1].equalsIgnoreCase("pool");
+	}
+
+
+	private static final String[] BLIGHT_CMDS = { "add", "remove" };
+
+	public static final int BLIGHT = ID_CREATOR++;
+	public static final int BLIGHT_IDS = ID_CREATOR++;
+
+	private static void createBlightSuggestions() {
+		if (whiteSpaces == 1) {
+			alreadySorted = true;
+			if (currentID == BLIGHT) {
+				return;
+			}
+			currentID = BLIGHT;
+			suggestions.clear();
+			suggestions.addAll(Arrays.asList(BLIGHT_CMDS));
+		} else if (whiteSpaces == 2) {
+			if (isBlightIDsCMD()) {
+				if (currentID == BLIGHT_IDS) {
+					alreadySorted = true;
+					return;
+				}
+				currentID = BLIGHT_IDS;
+				suggestions.clear();
+				for (String id : BlightHelper.blights) {
+					suggestions.add(id.replace(' ', '_'));
+				}
+			} else {
+				currentID = RESET;
+				noMatch = true;
+			}
+		} else {
+			commandComplete = true;
+		}
+	}
+
+	private static boolean isBlightIDsCMD() {
+		return tokens[1].equalsIgnoreCase("a") || tokens[1].equalsIgnoreCase("add")
+				|| tokens[1].equalsIgnoreCase("r") || tokens[1].equalsIgnoreCase("remove");
 	}
 
 	private static final String[] HAND_CMDS = { "add", "discard", "remove", "set" };

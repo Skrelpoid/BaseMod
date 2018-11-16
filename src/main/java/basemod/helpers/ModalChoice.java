@@ -41,6 +41,7 @@ public class ModalChoice
         for (AbstractCard c : cards) {
             AbstractCard copy = c.makeStatEquivalentCopy();
             copy.dontTriggerOnUseCard = true;
+            copy.freeToPlayOnce = true;
             if (copy.type != AbstractCard.CardType.POWER) {
                 copy.purgeOnUse = true;
             } else {

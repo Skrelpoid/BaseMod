@@ -464,6 +464,15 @@ This is a fast forward to v1.6.3 of daviscook477's fork with a few additional ch
 * Easier SpineAnimation option for custom characters (kiooeht)
 * Fix Diverse adding base character cards twice (kiooeht)
 
-#### dev ####
+#### v5.3.0 ####
 * DevConsole AutoComplete: The active suggestion is now highlighted. Suggestions are now filled up to ":" (Skrelpoid)
 * Customizable Colors for CustomDynamicVariable (Skrelpoid)
+* Fix softlock with Modal cards (kiooeht)
+* Many bug fixes for the console (Skrelpoid)
+* Blight command (kiooeht)
+
+#### v5.3.1 ####
+* Fix for week 50 drawing colorless icon over custom character cards in single card view (kiooeht)
+
+#### dev ####
+* Fix custom character name color in stats screen (kiooeht)
