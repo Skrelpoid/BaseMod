@@ -35,7 +35,7 @@ public final class CommandsHelper {
 	 * as possibleSubCommands. Setting the next command as the default sub command of this command is the prefered
 	 * way to handle number arguments to allow any number
 	 */
-	public static AbstractIntermediateCommand newSmallNumberTemplate() {
+	public static SimpleIntermediateCommand newSmallNumbersTemplate() {
 		SimpleIntermediateCommand numberCommand = new SimpleIntermediateCommand();
 		numberCommand.setDefaultAutocompleteMessage("number");
 		numberCommand.setPossibleSubCommands(CommandsHelper::smallNumbers);
@@ -58,7 +58,7 @@ public final class CommandsHelper {
 	 * and 100, 200, 300... to 900 (inclusive) as possibleSubCommands. Setting the next command as the default 
 	 * sub command of this command is the prefered way to handle number arguments to allow any number
 	 */
-	public static AbstractIntermediateCommand newMediumNumberTemplate() {
+	public static SimpleIntermediateCommand newMediumNumbersTemplate() {
 		SimpleIntermediateCommand numberCommand = new SimpleIntermediateCommand();
 		numberCommand.setDefaultAutocompleteMessage("number");
 		numberCommand.setPossibleSubCommands(CommandsHelper::mediumNumbers);
@@ -81,7 +81,7 @@ public final class CommandsHelper {
 	 * and 1000, 2000, 3000... to 9000 (inclusive) as possibleSubCommands. Setting the next command as the default 
 	 * sub command of this command is the prefered way to handle number arguments to allow any number
 	 */
-	public static AbstractIntermediateCommand newbigNumberTemplate() {
+	public static SimpleIntermediateCommand newBigNumbersTemplate() {
 		SimpleIntermediateCommand numberCommand = new SimpleIntermediateCommand();
 		numberCommand.setDefaultAutocompleteMessage("number");
 		numberCommand.setPossibleSubCommands(CommandsHelper::mediumNumbers);
