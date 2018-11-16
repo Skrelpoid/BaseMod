@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import com.megacrit.cardcrawl.dungeons.AbstractDungeon;
+import com.megacrit.cardcrawl.helpers.BlightHelper;
 import com.megacrit.cardcrawl.helpers.CardLibrary;
 import com.megacrit.cardcrawl.helpers.PotionHelper;
 import com.megacrit.cardcrawl.localization.EventStrings;
@@ -26,7 +27,7 @@ public final class CommandsHelper {
 	 * @return a collection of Strings with numbers from 1 to 9 (inclusive)
 	 */
 	public static Collection<String> smallNumbers() {
-		return IntStream.range(1, 10).mapToObj(String::valueOf).collect(Collectors.toList());
+		return IntStream.rangeClosed(1, 9).mapToObj(String::valueOf).collect(Collectors.toList());
 	}
 	
 	/**
@@ -46,7 +47,7 @@ public final class CommandsHelper {
 	 * and 100, 200, 300... to 900 (inclusive)
 	 */
 	public static Collection<String> mediumNumbers() {
-		return IntStream.range(1, 10)
+		return IntStream.rangeClosed(1, 9)
 				.flatMap(i -> IntStream.of(i * 10, i * 100))
 				.mapToObj(String::valueOf)
 				.collect(Collectors.toList());
@@ -69,7 +70,7 @@ public final class CommandsHelper {
 	 * and 1000, 2000, 3000... to 9000 (inclusive)
 	 */
 	public static Collection<String> bigNumbers() {
-		return IntStream.range(1, 10)
+		return IntStream.rangeClosed(1, 9)
 				.flatMap(i -> IntStream.of(i * 100, i * 1000))
 				.mapToObj(String::valueOf)
 				.collect(Collectors.toList());
@@ -157,6 +158,16 @@ public final class CommandsHelper {
 				.map(CommandsHelper::toUnderScoreId)
 				.collect(Collectors.toList());
 	}
+	
+	/**
+	 * @return a collection of blight ids to be used by commands
+	 */
+	public static Collection<String> getBlightIds() {
+		return BlightHelper.blights.stream()
+				.map(CommandsHelper::toUnderScoreId)
+				.collect(Collectors.toList());
+	}
+	
 	/**
 	 * @return a collection of strings representing valid potion ids at the time this method was called
 	 */
