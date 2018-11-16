@@ -4,6 +4,8 @@ import com.megacrit.cardcrawl.core.Settings;
 import basemod.DevConsole;
 
 public class DebugCommand extends AbstractIntermediateCommand {
+	
+	public static String[] DEFAULT_ERROR = { "could not parse previous command", "options are:", "* true", "* false" };
 
 	public DebugCommand() {
 		SimpleEndCommand debugTrue = new SimpleEndCommand((t, c) -> setDebugModeAndLog(true));
@@ -19,10 +21,7 @@ public class DebugCommand extends AbstractIntermediateCommand {
 	
 	@Override
 	public String defaultErrorMessage() {
-		return "could not parse previous command\n" + 
-				"options are:\n" + 
-				"* true\n" + 
-				"* false"; 
+		return String.join(InvalidCommandException.LINE_DELIMITER, DEFAULT_ERROR);
 	}
 
 }
