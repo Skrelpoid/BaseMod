@@ -4,6 +4,7 @@ import basemod.commands.AbstractEndCommand;
 import basemod.commands.AbstractIntermediateCommand;
 import basemod.commands.CustomCommand;
 import basemod.commands.DebugCommand;
+import basemod.commands.HandCommand;
 import basemod.commands.InvalidCommandException;
 import basemod.commands.SimpleIntermediateCommand;
 import basemod.helpers.ConvertHelper;
@@ -99,6 +100,7 @@ implements PostEnergyRechargeSubscriber, PostInitializeSubscriber, PostRenderSub
 	
 	private static void addCommands() {
 		BaseMod.addCommand("debug2", new DebugCommand());
+		BaseMod.addCommand("hand2", new HandCommand());
 	}
 
 	// If you add, remove or change a command make sure to also do the same in the AutoComplete class
