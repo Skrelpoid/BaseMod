@@ -91,7 +91,7 @@ public class SimpleIntermediateCommand extends AbstractIntermediateCommand {
 	
 	@Override
 	public boolean shouldRunEndCommand(String token, String[] fullCommand) {
-		return endCommandChecker == null || endCommandChecker.test(token, fullCommand);
+		return endCommandChecker != null && endCommandChecker.test(token, fullCommand);
 	}
 	
 	/**
